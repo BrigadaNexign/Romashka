@@ -34,6 +34,14 @@ public class CDRServiceImpl implements CDRService {
         this.subscriberService = subscriberService;
     }
 
+    /**
+     * Метод, выполняемый после создания бина. Инициализирует данные.
+     */
+    @PostConstruct
+    public void init() {
+        initializeData();
+    }
+
     @Override
     public CDR saveCDR(CDR cdr) {
         return cdrRepository.save(cdr);
@@ -56,8 +64,8 @@ public class CDRServiceImpl implements CDRService {
 
     @Override
     public void initializeData() {
-        initializeSubscribers();
         generateCDRsForYear();
+        initializeSubscribers();
     }
 
     @Override
@@ -73,21 +81,17 @@ public class CDRServiceImpl implements CDRService {
     }
 
     /**
-     * Метод, выполняемый после создания бина. Инициализирует данные.
-     */
-    @PostConstruct
-    public void init() {
-        initializeData();
-    }
-
-    /**
      * Инициализирует список абонентов.
      */
     private void initializeSubscribers() {
         List<String> msisdns = Arrays.asList(
-                "79992221122", "79993331133", "79994441144", "79995551155",
-                "79996661166", "79997771177", "79998881188", "79999991199",
-                "79991112233", "79992223344"
+                "79991113355", "79992224466", "79993335577", "79994446688",
+                "79995557799", "79996668800", "79997779911", "79998880022",
+                "79990001133", "79991112244", "79992223355", "79993334466",
+                "79994445577", "79995556688", "79996667799", "79997778800",
+                "79998889911", "79999990022", "79990001144", "79991113366",
+                "79992224477", "79993335588", "79994446699", "79995557700",
+                "79996668811", "79997779922", "79998880033", "79999991144"
         );
 
         for (String msisdn : msisdns) {
@@ -155,5 +159,14 @@ public class CDRServiceImpl implements CDRService {
             receiver = subscribers.get(random.nextInt(subscribers.size()));
         }
         return receiver.getMsisdn();
+    }
+
+    public boolean hasConflictingCalls(
+            String caller,
+            String receiver,
+            LocalDateTime start,
+            LocalDateTime end
+    ) {
+        return cdrRepository.existsConflictingCalls(caller, receiver, start, end);
     }
 }

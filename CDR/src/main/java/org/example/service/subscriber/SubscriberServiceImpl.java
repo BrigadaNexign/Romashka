@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -17,11 +18,6 @@ import java.util.List;
 public class SubscriberServiceImpl implements SubscriberService{
     private final SubscriberRepository subscriberRepository;
 
-    /**
-     * Конструктор с внедрением зависимости репозитория абонентов.
-     *
-     * @param subscriberRepository репозиторий для работы с абонентами
-     */
     @Autowired
     public SubscriberServiceImpl(SubscriberRepository subscriberRepository) {
         this.subscriberRepository = subscriberRepository;

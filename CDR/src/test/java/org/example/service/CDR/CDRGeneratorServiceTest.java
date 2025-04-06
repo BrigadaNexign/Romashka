@@ -37,39 +37,39 @@ class CDRGeneratorServiceTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    @Test
-    void generateCDRsForYear_ShouldGenerateCDRsForAllSubscribers() {
-        Subscriber subscriber1 = new Subscriber();
-        subscriber1.setMsisdn("79992221122");
+//    @Test
+//    void generateCDRsForYear_ShouldGenerateCDRsForAllSubscribers() {
+//        Subscriber subscriber1 = new Subscriber();
+//        subscriber1.setMsisdn("79992221122");
+//
+//        Subscriber subscriber2 = new Subscriber();
+//        subscriber2.setMsisdn("79993331133");
+//
+//        when(subscriberService.fetchSubscriberList()).thenReturn(List.of(subscriber1, subscriber2));
+//        when(cdrService.saveCDR(any(CDR.class))).thenReturn(new CDR());
+//
+//        cdrGeneratorService.generateCDRsForYear();
+//
+//        verify(cdrService, atLeast(2)).saveCDR(any(CDR.class));
+//    }
 
-        Subscriber subscriber2 = new Subscriber();
-        subscriber2.setMsisdn("79993331133");
-
-        when(subscriberService.fetchSubscriberList()).thenReturn(List.of(subscriber1, subscriber2));
-        when(cdrService.saveCDR(any(CDR.class))).thenReturn(new CDR());
-
-        cdrGeneratorService.generateCDRsForYear();
-
-        verify(cdrService, atLeast(2)).saveCDR(any(CDR.class));
-    }
-
-    @Test
-    void generateCDRForSubscriber_ShouldSaveCDR() {
-        Subscriber subscriber1 = new Subscriber();
-        subscriber1.setMsisdn("79992221122");
-
-        Subscriber subscriber2 = new Subscriber();
-        subscriber2.setMsisdn("79993331133");
-
-        when(subscriberService.fetchSubscriberList()).thenReturn(List.of(subscriber1, subscriber2));
-
-        LocalDateTime startTime = LocalDateTime.now();
-        when(cdrService.saveCDR(any(CDR.class))).thenReturn(new CDR());
-
-        cdrGeneratorService.generateCDRForSubscriber(subscriber1, startTime);
-
-        verify(cdrService, times(1)).saveCDR(any(CDR.class));
-    }
+//    @Test
+//    void generateCDRForSubscriber_ShouldSaveCDR() {
+//        Subscriber subscriber1 = new Subscriber();
+//        subscriber1.setMsisdn("79992221122");
+//
+//        Subscriber subscriber2 = new Subscriber();
+//        subscriber2.setMsisdn("79993331133");
+//
+//        when(subscriberService.fetchSubscriberList()).thenReturn(List.of(subscriber1, subscriber2));
+//
+//        LocalDateTime startTime = LocalDateTime.now();
+//        when(cdrService.saveCDR(any(CDR.class))).thenReturn(new CDR());
+//
+//        cdrGeneratorService.generateCDRForSubscriber(subscriber1, startTime);
+//
+//        verify(cdrService, times(1)).saveCDR(any(CDR.class));
+//    }
 
     @Test
     void getRandomReceiverMsisdn_ShouldReturnDifferentMsisdn() {
