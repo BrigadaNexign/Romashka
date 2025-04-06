@@ -13,10 +13,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -87,17 +85,64 @@ public class CDRGeneratorService {
 
     private void generateCdrRecords() {
         try {
-            LocalDateTime startDate = LocalDateTime.now().minusYears(1);
-            LocalDateTime endDate = LocalDateTime.now();
+            LocalDateTime startTime = LocalDateTime.now().minusYears(1);
+            LocalDateTime endTime = LocalDateTime.now();
 
-            while (startDate.isBefore(endDate)) {
+//            List<CDR> allCDRs = new ArrayList<>();
+
+            while (startTime.isBefore(endTime)) {
+                int minutesToAdd = 1 + random.nextInt(59);
+                LocalDateTime nextDate = startTime.plusMinutes(minutesToAdd);
+
+                if (nextDate.isAfter(endTime)) {
+                    break;
+                }
+
                 CDR cdr = generateConflictFreeCDR(
                         subscribersList.get(random.nextInt(subscribersList.size())),
-                        startDate
+                        startTime
                 );
-                cdrQueue.put(Optional.of(cdr));
-                startDate = startDate.plusMinutes(random.nextInt(60));
+
+                if (cdr.getStartTime().getDayOfYear() != cdr.getEndTime().getDayOfYear()
+                        || !cdr.getStartTime().toLocalDate().equals(cdr.getEndTime().toLocalDate()))
+                {
+                    LocalDateTime midnight = cdr.getStartTime().toLocalDate().plusDays(1).atStartOfDay();
+
+                    CDR firstPart = createCDR(
+                            cdr.getCallType(),
+                            cdr.getCallerMsisdn(),
+                            cdr.getReceiverMsisdn(),
+                            cdr.getStartTime(),
+                            midnight.minusSeconds(1)
+                    );
+                    cdrQueue.put(Optional.of(firstPart));
+//                    allCDRs.add(firstPart);
+
+                    CDR secondPart = createCDR(
+                            cdr.getCallType(),
+                            cdr.getCallerMsisdn(),
+                            cdr.getReceiverMsisdn(),
+                            midnight.plusSeconds(0),
+                            cdr.getEndTime()
+                    );
+                    cdrQueue.put(Optional.of(secondPart));
+//                    allCDRs.add(secondPart);
+                } else {
+//                    allCDRs.add(cdr);
+                    cdrQueue.put(Optional.of(cdr));
+                }
+
+                startTime = nextDate;
+
+                // cdrQueue.put(Optional.of(cdr));
+                startTime = startTime.plusMinutes(random.nextInt(60));
             }
+
+            //allCDRs.sort(Comparator.comparing(CDR::getStartTime));
+
+//            for (CDR cdr : allCDRs) {
+//                cdrQueue.put(Optional.of(cdr));
+//            }
 
             cdrQueue.put(Optional.empty());
         } catch (InterruptedException e) {
@@ -137,9 +182,6 @@ public class CDRGeneratorService {
                 Optional<CDR> cdrOpt = cdrQueue.take();
 
                 if (cdrOpt.isEmpty()) {
-                    if (!buffer.isEmpty()) {
-                        writeCdrBatchToFile(buffer);
-                    }
                     break;
                 }
 
@@ -176,12 +218,13 @@ public class CDRGeneratorService {
     }
 
     private String formatCdr(CDR cdr) {
-        return String.join(",",
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        return String.join(", ",
                 cdr.getCallType(),
                 cdr.getCallerMsisdn(),
                 cdr.getReceiverMsisdn(),
-                cdr.getStartTime().toString(),
-                cdr.getEndTime().toString()
+                cdr.getStartTime().format(formatter),
+                cdr.getEndTime().format(formatter)
         );
     }
 
