@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - '5432:5432'
+      - '54320:5432'
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
@@ -42,14 +42,15 @@ services:
     image: liquibase/liquibase
     container_name: liquibase
     volumes:
-      - ${PWD}/resources/db/changelog
+      - ${PWD}/resources/db/changelog/changelog_master.xml:/liquibase/changelog_master.xml
+      - ${PWD}/resources/db/changelog/v.0.0.1:/liquibase/v.0.0.1
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - romashka_network
     # Автоматически применяет миграции при старте
-    command: --defaults-file=${PWD}/liquibase.properties update
+    command: --url="jdbc:postgresql://postgres_db:5432/users_db" --username=admin --password=admin --changeLogFile=changelog_master.xml update
 
   cdr:
     build: CDR/
