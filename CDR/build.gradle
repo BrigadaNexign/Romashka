@@ -13,6 +13,16 @@ java {
     }
 }
 
+jar {
+    manifest {
+        attributes 'Main-Class': 'org.example.Application'
+    }
+}
+
+//task wrapper(type: Wrapper){
+//    gradleVersion = '8.13'
+//}
+
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
@@ -35,6 +45,6 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
-}
+//tasks.named('test') {
+//    useJUnitPlatform()
+//}

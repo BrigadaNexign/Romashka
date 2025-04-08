@@ -58,3 +58,4 @@ logs/
 
 # Reports
 **/reports/
+/resources/rabbitmq_data/
