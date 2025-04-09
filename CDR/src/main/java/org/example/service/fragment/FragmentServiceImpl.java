@@ -1,7 +1,7 @@
-package org.example.service.CDR;
+package org.example.service.fragment;
 
 import jakarta.annotation.PostConstruct;
-import org.example.entity.CDR;
+import org.example.entity.Fragment;
 import org.example.entity.Subscriber;
 import org.example.repository.CDRRepository;
 import org.example.service.subscriber.SubscriberServiceImpl;
@@ -13,23 +13,23 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 /**
- * Реализация сервиса для работы с CDR.
- * Предоставляет методы для сохранения, поиска, удаления и инициализации данных CDR.
+ * Реализация сервиса для работы с Fragment.
+ * Предоставляет методы для сохранения, поиска, удаления и инициализации данных Fragment.
  */
 @Service
 @Component
-public class CDRServiceImpl implements CDRService {
+public class FragmentServiceImpl implements FragmentService {
     private final CDRRepository cdrRepository;
     private final SubscriberServiceImpl subscriberService;
 
     /**
      * Конструктор с внедрением зависимостей.
      *
-     * @param cdrRepository   репозиторий для работы с CDR
+     * @param cdrRepository   репозиторий для работы с Fragment
      * @param subscriberService сервис для работы с абонентами
      */
     @Autowired
-    public CDRServiceImpl (CDRRepository cdrRepository, SubscriberServiceImpl subscriberService) {
+    public FragmentServiceImpl(CDRRepository cdrRepository, SubscriberServiceImpl subscriberService) {
         this.cdrRepository = cdrRepository;
         this.subscriberService = subscriberService;
     }
@@ -43,12 +43,12 @@ public class CDRServiceImpl implements CDRService {
     }
 
     @Override
-    public CDR saveCDR(CDR cdr) {
-        return cdrRepository.save(cdr);
+    public Fragment saveCDR(Fragment fragment) {
+        return cdrRepository.save(fragment);
     }
 
     @Override
-    public List<CDR> fetchCDRList() {
+    public List<Fragment> fetchCDRList() {
         return cdrRepository.findAll();
     }
 
@@ -58,7 +58,7 @@ public class CDRServiceImpl implements CDRService {
     }
 
     @Override
-    public List<CDR> fetchCDRListByMsisdn(String callerMsisdn, String receiverMsisdn) {
+    public List<Fragment> fetchCDRListByMsisdn(String callerMsisdn, String receiverMsisdn) {
         return cdrRepository.findByCallerMsisdnOrReceiverMsisdn(callerMsisdn, receiverMsisdn);
     }
 
@@ -69,12 +69,12 @@ public class CDRServiceImpl implements CDRService {
     }
 
     @Override
-    public <S extends CDR> List<S> saveAllCDRs(Iterable<S> entities) {
+    public <S extends Fragment> List<S> saveAllCDRs(Iterable<S> entities) {
         return cdrRepository.saveAll(entities);
     }
 
     @Override
-    public List<CDR> fetchCDRListByMsisdnAndTime(String msisdn, LocalDateTime startOfMonth, LocalDateTime endOfMonth) {
+    public List<Fragment> fetchCDRListByMsisdnAndTime(String msisdn, LocalDateTime startOfMonth, LocalDateTime endOfMonth) {
         return cdrRepository.findByCallerMsisdnOrReceiverMsisdnAndStartTimeBetween(
                 msisdn, startOfMonth, endOfMonth
         );
@@ -102,7 +102,7 @@ public class CDRServiceImpl implements CDRService {
     }
 
     /**
-     * Генерирует CDR записи для всех абонентов за последний год.
+     * Генерирует Fragment записи для всех абонентов за последний год.
      */
     private void generateCDRsForYear() {
         List<Subscriber> subscribers = subscriberService.fetchSubscriberList();
@@ -110,39 +110,39 @@ public class CDRServiceImpl implements CDRService {
         LocalDateTime endDate = LocalDateTime.now();
         Random random = new Random();
 
-        List<CDR> allCDRs = new ArrayList<>();
+        List<Fragment> allFragments = new ArrayList<>();
 
         for (Subscriber subscriber : subscribers) {
             LocalDateTime currentDate = startDate;
             while (currentDate.isBefore(endDate)) {
-                CDR cdr = generateCDRForSubscriber(subscriber, currentDate);
-                allCDRs.add(cdr);
+                Fragment fragment = generateCDRForSubscriber(subscriber, currentDate);
+                allFragments.add(fragment);
                 currentDate = currentDate.plusMinutes(random.nextInt(1440));
             }
         }
 
-        allCDRs.sort(Comparator.comparing(CDR::getStartTime));
+        allFragments.sort(Comparator.comparing(org.example.entity.Fragment::getStartTime));
 
-        saveAllCDRs(allCDRs);
+        saveAllCDRs(allFragments);
     }
 
     /**
-     * Генерирует CDR запись для указанного абонента в заданное время.
+     * Генерирует Fragment запись для указанного абонента в заданное время.
      *
-     * @param subscriber абонент, для которого генерируется CDR запись
+     * @param subscriber абонент, для которого генерируется Fragment запись
      * @param startTime  время начала звонка
-     * @return сгенерированная CDR запись
+     * @return сгенерированная Fragment запись
      */
-    private CDR generateCDRForSubscriber(Subscriber subscriber, LocalDateTime startTime) {
-        CDR cdr = new CDR();
+    private Fragment generateCDRForSubscriber(Subscriber subscriber, LocalDateTime startTime) {
+        Fragment fragment = new Fragment();
         Random random = new Random();
-        cdr.setCallType(random.nextBoolean() ? "01" : "02");
-        cdr.setCallerMsisdn(subscriber.getMsisdn());
-        cdr.setReceiverMsisdn(getRandomReceiverMsisdn(subscriber.getMsisdn()));
-        cdr.setStartTime(startTime);
-        cdr.setEndTime(startTime.plusSeconds(random.nextInt(3600)));
+        fragment.setCallType(random.nextBoolean() ? "01" : "02");
+        fragment.setCallerMsisdn(subscriber.getMsisdn());
+        fragment.setReceiverMsisdn(getRandomReceiverMsisdn(subscriber.getMsisdn()));
+        fragment.setStartTime(startTime);
+        fragment.setEndTime(startTime.plusSeconds(random.nextInt(3600)));
 
-        return cdr;
+        return fragment;
     }
 
     /**

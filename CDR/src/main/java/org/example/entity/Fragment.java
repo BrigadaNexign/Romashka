@@ -2,19 +2,21 @@ package org.example.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 
 /**
- * Класс, представляющий сущность CDR.
- * CDR содержит информацию о звонке, включая тип вызова, номера абонентов и временные метки.
+ * Класс, представляющий сущность Fragment.
+ * Fragment содержит информацию о звонке, включая тип вызова, номера абонентов и временные метки.
  */
 @Data
 @Entity
-public class CDR {
+@ToString
+public class Fragment {
 
     /**
-     * Уникальный идентификатор записи CDR.
+     * Уникальный идентификатор записи Fragment.
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

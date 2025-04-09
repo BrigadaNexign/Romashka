@@ -1,6 +1,6 @@
 package org.example.repository;
 
-import org.example.entity.CDR;
+import org.example.entity.Fragment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,58 +9,58 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Репозиторий для работы с записями CDR.
- * Предоставляет методы для выполнения операций с базой данных, связанных с CDR.
+ * Репозиторий для работы с записями Fragment.
+ * Предоставляет методы для выполнения операций с базой данных, связанных с Fragment.
  *
- * @see org.example.entity.CDR
+ * @see Fragment
  */
-public interface CDRRepository extends JpaRepository<CDR, Long> {
+public interface CDRRepository extends JpaRepository<Fragment, Long> {
 
     /**
-     * Удаляет запись CDR по её идентификатору.
+     * Удаляет запись Fragment по её идентификатору.
      *
-     * @param CDRId идентификатор записи CDR
+     * @param CDRId идентификатор записи Fragment
      */
     void deleteById(Long CDRId);
 
     /**
-     * Находит все записи CDR, связанные с указанным номером абонента (как вызывающего, так и принимающего).
+     * Находит все записи Fragment, связанные с указанным номером абонента (как вызывающего, так и принимающего).
      *
      * @param callerMsisdn номер вызывающего абонента
      * @param receiverMsisdn номер принимающего абонента
-     * @return список записей CDR
+     * @return список записей Fragment
      */
-    List<CDR> findByCallerMsisdnOrReceiverMsisdn(String callerMsisdn, String receiverMsisdn);
+    List<Fragment> findByCallerMsisdnOrReceiverMsisdn(String callerMsisdn, String receiverMsisdn);
 
     /**
-     * Сохраняет все переданные записи CDR.
+     * Сохраняет все переданные записи Fragment.
      *
-     * @param entities список записей CDR для сохранения
-     * @param <S> тип записи CDR
-     * @return список сохраненных записей CDR
+     * @param entities список записей Fragment для сохранения
+     * @param <S> тип записи Fragment
+     * @return список сохраненных записей Fragment
      */
     @Override
-    <S extends CDR> List<S> saveAll(Iterable<S> entities);
+    <S extends Fragment> List<S> saveAll(Iterable<S> entities);
 
     /**
-     * Находит все записи CDR, связанные с указанным номером абонента (как вызывающего, так и принимающего),
+     * Находит все записи Fragment, связанные с указанным номером абонента (как вызывающего, так и принимающего),
      * и ограниченные временным интервалом.
      *
      * @param msisdn номер абонента
      * @param startTime начало временного интервала
      * @param endTime конец временного интервала
-     * @return список записей CDR, соответствующих критериям
+     * @return список записей Fragment, соответствующих критериям
      */
-    @Query("SELECT c FROM CDR c WHERE (c.callerMsisdn = :msisdn OR c.receiverMsisdn = :msisdn) " +
+    @Query("SELECT c FROM Fragment c WHERE (c.callerMsisdn = :msisdn OR c.receiverMsisdn = :msisdn) " +
             "AND c.startTime BETWEEN :startTime AND :endTime")
-    List<CDR> findByCallerMsisdnOrReceiverMsisdnAndStartTimeBetween(
+    List<Fragment> findByCallerMsisdnOrReceiverMsisdnAndStartTimeBetween(
             @Param("msisdn") String msisdn,
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime
     );
 
     @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END " +
-            "FROM CDR c WHERE " +
+            "FROM Fragment c WHERE " +
             "((c.callerMsisdn = :callerMsisdn OR c.receiverMsisdn = :receiverMsisdn) " +
             "OR (c.callerMsisdn = :receiverMsisdn OR c.receiverMsisdn = :callerMsisdn)) " +
             "AND ((c.startTime BETWEEN :startTime AND :endTime) OR " +

@@ -1,7 +1,7 @@
 package org.example;
 
-import org.example.service.CDR.CDRGeneratorService;
-import org.springframework.boot.SpringApplication;
+import org.example.service.CDR.GenerationExecutor;
+import org.example.service.fragment.FragmentGenerator;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -20,7 +20,7 @@ public class Application {
     public static void main(String[] args) {
         //SpringApplication.run(Application.class, args);
         ApplicationContext context = new AnnotationConfigApplicationContext(Application.class);
-        CDRGeneratorService service = context.getBean(CDRGeneratorService.class);
-        service.generateAllBatches();
+        GenerationExecutor executor = context.getBean(GenerationExecutor.class);
+        executor.generateAllBatches();
     }
 }

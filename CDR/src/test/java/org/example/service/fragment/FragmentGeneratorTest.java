@@ -1,6 +1,5 @@
-package org.example.service.CDR;
+package org.example.service.fragment;
 
-import org.example.entity.CDR;
 import org.example.entity.Subscriber;
 import org.example.service.subscriber.SubscriberServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +10,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -21,16 +19,16 @@ import static org.mockito.Mockito.*;
 
 @ActiveProfiles("test")
 @DataJpaTest
-class CDRGeneratorServiceTest {
+class FragmentGeneratorTest {
 
     @Mock
-    private CDRServiceImpl cdrService;
+    private FragmentServiceImpl cdrService;
 
     @Mock
     private SubscriberServiceImpl subscriberService;
 
     @InjectMocks
-    private CDRGeneratorService cdrGeneratorService;
+    private FragmentGenerator fragmentGenerator;
 
     @BeforeEach
     void setUp() {
@@ -46,11 +44,11 @@ class CDRGeneratorServiceTest {
 //        subscriber2.setMsisdn("79993331133");
 //
 //        when(subscriberService.fetchSubscriberList()).thenReturn(List.of(subscriber1, subscriber2));
-//        when(cdrService.saveCDR(any(CDR.class))).thenReturn(new CDR());
+//        when(cdrService.saveCDR(any(Fragment.class))).thenReturn(new Fragment());
 //
-//        cdrGeneratorService.generateCDRsForYear();
+//        fragmentGenerator.generateCDRsForYear();
 //
-//        verify(cdrService, atLeast(2)).saveCDR(any(CDR.class));
+//        verify(cdrService, atLeast(2)).saveCDR(any(Fragment.class));
 //    }
 
 //    @Test
@@ -64,11 +62,11 @@ class CDRGeneratorServiceTest {
 //        when(subscriberService.fetchSubscriberList()).thenReturn(List.of(subscriber1, subscriber2));
 //
 //        LocalDateTime startTime = LocalDateTime.now();
-//        when(cdrService.saveCDR(any(CDR.class))).thenReturn(new CDR());
+//        when(cdrService.saveCDR(any(Fragment.class))).thenReturn(new Fragment());
 //
-//        cdrGeneratorService.generateCDRForSubscriber(subscriber1, startTime);
+//        fragmentGenerator.generateCDRForSubscriber(subscriber1, startTime);
 //
-//        verify(cdrService, times(1)).saveCDR(any(CDR.class));
+//        verify(cdrService, times(1)).saveCDR(any(Fragment.class));
 //    }
 
     @Test
@@ -82,7 +80,7 @@ class CDRGeneratorServiceTest {
 
         when(subscriberService.fetchSubscriberList()).thenReturn(List.of(receiver1, receiver2));
 
-        String result = cdrGeneratorService.getRandomReceiverMsisdn(callerMsisdn);
+        String result = fragmentGenerator.getRandomReceiverMsisdn(callerMsisdn);
 
         assertNotNull(result);
         assertNotEquals(callerMsisdn, result);
@@ -97,7 +95,7 @@ class CDRGeneratorServiceTest {
 
         when(subscriberService.fetchSubscriberList()).thenReturn(Collections.singletonList(receiver));
 
-        assertEquals(receiverMsisdn, cdrGeneratorService.getRandomReceiverMsisdn(callerMsisdn));
+        assertEquals(receiverMsisdn, fragmentGenerator.getRandomReceiverMsisdn(callerMsisdn));
     }
 
     @Test
@@ -111,6 +109,6 @@ class CDRGeneratorServiceTest {
 
         when(subscriberService.fetchSubscriberList()).thenReturn(Collections.singletonList(receiver));
 
-        assertThrows(IllegalStateException.class, () -> cdrGeneratorService.getRandomReceiverMsisdn(callerMsisdn));
+        assertThrows(IllegalStateException.class, () -> fragmentGenerator.getRandomReceiverMsisdn(callerMsisdn));
     }
 }

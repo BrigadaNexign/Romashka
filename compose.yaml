@@ -20,6 +20,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.10.7-management
+    hostname: rabbitmq-host
     container_name: rabbitmq
     volumes:
       - ${PWD}/resources/rabbitmq_data:/var/lib/rabbitmq  # Только данные

@@ -1,6 +1,6 @@
 package org.example.repository;
 
-import org.example.entity.CDR;
+import org.example.entity.Fragment;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @ActiveProfiles("test")
 @DataJpaTest
-class CDRRepositoryTest {
+class FragmentRepositoryTest {
 
     @Autowired
     private CDRRepository cdrRepository;
@@ -24,19 +24,19 @@ class CDRRepositoryTest {
         LocalDateTime startDate = LocalDateTime.now().minusDays(1);
         LocalDateTime endDate = LocalDateTime.now();
 
-        CDR cdr = new CDR();
-        cdr.setCallType("01");
-        cdr.setCallerMsisdn(msisdn);
-        cdr.setReceiverMsisdn("79993331133");
-        cdr.setStartTime(startDate);
-        cdr.setEndTime(endDate);
-        cdrRepository.save(cdr);
+        Fragment fragment = new Fragment();
+        fragment.setCallType("01");
+        fragment.setCallerMsisdn(msisdn);
+        fragment.setReceiverMsisdn("79993331133");
+        fragment.setStartTime(startDate);
+        fragment.setEndTime(endDate);
+        cdrRepository.save(fragment);
 
-        List<CDR> cdrs = cdrRepository.findByCallerMsisdnOrReceiverMsisdnAndStartTimeBetween(
+        List<Fragment> fragments = cdrRepository.findByCallerMsisdnOrReceiverMsisdnAndStartTimeBetween(
                 msisdn, startDate, endDate);
 
-        assertFalse(cdrs.isEmpty());
-        assertEquals(msisdn, cdrs.get(0).getCallerMsisdn());
+        assertFalse(fragments.isEmpty());
+        assertEquals(msisdn, fragments.get(0).getCallerMsisdn());
     }
 
     @Test
@@ -45,18 +45,18 @@ class CDRRepositoryTest {
         LocalDateTime startDate = LocalDateTime.now().minusDays(1);
         LocalDateTime endDate = LocalDateTime.now();
 
-        CDR cdr = new CDR();
-        cdr.setCallType("01");
-        cdr.setCallerMsisdn(msisdn);
-        cdr.setReceiverMsisdn("79993331133");
-        cdr.setStartTime(startDate);
-        cdr.setEndTime(endDate);
-        cdrRepository.save(cdr);
+        Fragment fragment = new Fragment();
+        fragment.setCallType("01");
+        fragment.setCallerMsisdn(msisdn);
+        fragment.setReceiverMsisdn("79993331133");
+        fragment.setStartTime(startDate);
+        fragment.setEndTime(endDate);
+        cdrRepository.save(fragment);
 
-        List<CDR> cdrs = cdrRepository.findByCallerMsisdnOrReceiverMsisdnAndStartTimeBetween(
+        List<Fragment> fragments = cdrRepository.findByCallerMsisdnOrReceiverMsisdnAndStartTimeBetween(
                 msisdn, startDate, endDate);
 
-        assertFalse(cdrs.isEmpty());
-        assertEquals(msisdn, cdrs.get(0).getCallerMsisdn());
+        assertFalse(fragments.isEmpty());
+        assertEquals(msisdn, fragments.get(0).getCallerMsisdn());
     }
 }
