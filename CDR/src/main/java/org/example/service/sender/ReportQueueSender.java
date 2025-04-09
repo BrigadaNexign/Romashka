@@ -1,7 +1,6 @@
 package org.example.service.sender;
 
 import lombok.RequiredArgsConstructor;
-import org.example.entity.Fragment;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,8 +16,8 @@ public class ReportQueueSender implements ReportSender {
 //    String routingKey;
 
     @Override
-    public void sendReport(Fragment fragment) {
-        rabbitTemplate.convertAndSend("fragment.direct", "fragment", fragment.toString());
-        System.out.println("Sent Fragment message: " + fragment.toString());
+    public void sendReport(String message) {
+        rabbitTemplate.convertAndSend("cdr.direct", "cdr", message);
+        System.out.println("Sent cdr: " + message);
     }
 }

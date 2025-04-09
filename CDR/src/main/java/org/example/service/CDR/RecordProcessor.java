@@ -3,6 +3,7 @@ package org.example.service.CDR;
 import lombok.AllArgsConstructor;
 import org.example.entity.Fragment;
 import org.example.service.fragment.FragmentEditor;
+import org.example.service.sender.ReportQueueSender;
 import org.example.util.FragmentBlockingQueue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,8 @@ public class RecordProcessor {
     private FragmentEditor fragmentEditor;
     @Autowired
     private final FragmentBlockingQueue fragmentQueue;
+    @Autowired
+    private ReportQueueSender reportQueueSender;
 
     private static final int RECORDS_PER_FILE = 10;
     private final AtomicInteger fileCounter = new AtomicInteger(1);
@@ -45,6 +48,7 @@ public class RecordProcessor {
                 if (buffer.size() >= RECORDS_PER_FILE) {
                     writeSortedBatchToFile(buffer);
                     buffer = new ArrayList<>(RECORDS_PER_FILE);
+
                 }
             }
         } catch (InterruptedException e) {
@@ -65,6 +69,7 @@ public class RecordProcessor {
 
         String filename = "reports/cdr_batch_" + fileCounter.getAndIncrement() + ".txt";
 
+        reportQueueSender.sendReport(recordToMessage(fragments));
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
             for (Fragment fragment : fragments) {
                 writer.write(fragmentEditor.formatFragment(fragment));
@@ -73,5 +78,13 @@ public class RecordProcessor {
         } catch (IOException e) {
             throw new IOException("Failed to write Fragment batch to file: " + filename, e);
         }
+    }
+
+    public String recordToMessage(List<Fragment> fragments) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Fragment fragment: fragments) {
+            stringBuilder.append(fragmentEditor.formatFragment(fragment)).append("\n");
+        }
+        return stringBuilder.toString();
     }
 }
