@@ -3,6 +3,7 @@ package org.example.service.sender;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -10,14 +11,14 @@ import org.springframework.stereotype.Service;
 public class ReportQueueSender implements ReportSender {
     @Autowired
     private final RabbitTemplate rabbitTemplate;
-//    @Value("${spring.rabbitmq.queue.name}")
-//    String exchangeName;
-//    @Value("${spring.rabbitmq.routingKey}")
-//    String routingKey;
+    @Value("${spring.rabbitmq.queue.name}")
+    String exchangeName;
+    @Value("${spring.rabbitmq.routing.key}")
+    String routingKey;
 
     @Override
     public void sendReport(String message) {
-        rabbitTemplate.convertAndSend("cdr.direct", "cdr", message);
+        rabbitTemplate.convertAndSend(exchangeName, routingKey, message);
         System.out.println("Sent cdr: " + message);
     }
 }
