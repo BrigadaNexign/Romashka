@@ -1,0 +1,50 @@
+{
+  "users": [
+    {
+      "name": "admin",
+      "password": "admin",
+      "tags": "administrator"
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "admin",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "queues": [
+    {
+      "name": "cdr.queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "cdr.direct",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false
+    }
+  ],
+  "bindings": [
+    {
+      "source": "cdr.direct",
+      "vhost": "/",
+      "destination": "cdr.queue",
+      "destination_type": "queue",
+      "routing_key": "cdr"
+    }
+  ]
+}

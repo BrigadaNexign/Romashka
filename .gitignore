@@ -1,9 +1,6 @@
 # Compiled class file
 *.class
 
-# Log file
-*.log
-
 # BlueJ files
 *.ctxt
 
@@ -22,3 +19,41 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# Gradle files
+.gradle/
+build/
+out/
+!gradle-wrapper.jar
+
+# IntelliJ IDEA files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Build output
+**/build/
+**/target/
+
+# Dependency cache
+**/lib/
+**/libs/
+
+# Logs
+*.log
+logs/
+
+# Local configuration files
+*.properties
+*.keystore
+.env
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._
+
+# Reports
+**/reports/
+/resources/rabbitmq_data/
