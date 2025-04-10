@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet logicalFilePath="2025-04-08-2-insert-users"
+               id="2023-05-12-2-insert-users" author="n.d">
+        <insert tableName="user">
+            <column  name="msisdn"  value="79991113355"/>
+            <column  name="tariff"  value="01"/>
+            <column  name="balance"  value="600"/>
+            <column  name="minutes"  value="321"/>
+        </insert>
+        <insert tableName="user">
+            <column  name="msisdn"  value="79992224466"/>
+            <column  name="tariff"  value="02"/>
+            <column  name="balance"  value="30"/>
+            <column  name="minutes"  value="432"/>
+        </insert>
+        <insert tableName="user">
+            <column  name="msisdn"  value="79993335577"/>
+            <column  name="tariff"  value="01"/>
+            <column  name="balance"  value="0"/>
+            <column  name="minutes"  value="234"/>
+        </insert>
+        <insert tableName="user">
+            <column  name="msisdn"  value="79994446688"/>
+            <column  name="tariff"  value="02"/>
+            <column  name="balance"  value="1000"/>
+            <column  name="minutes"  value="543"/>
+        </insert>
+        <insert tableName="user">
+            <column  name="msisdn"  value="79995557799"/>
+            <column  name="tariff"  value="01"/>
+            <column  name="balance"  value="650"/>
+            <column  name="minutes"  value="345"/>
+        </insert>
+        <insert tableName="user">
+            <column  name="msisdn"  value="79996668800"/>
+            <column  name="tariff"  value="02"/>
+            <column  name="balance"  value="900"/>
+            <column  name="minutes"  value="567"/>
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>
