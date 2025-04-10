@@ -45,7 +45,6 @@ out/
 logs/
 
 # Local configuration files
-*.properties
 *.keystore
 .env
 
