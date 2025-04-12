@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class ReportQueueSender implements ReportSender {
+public class ReportQueueSender {
     @Autowired
     private final RabbitTemplate rabbitTemplate;
     @Value("${spring.rabbitmq.queue.name}")
@@ -16,7 +16,6 @@ public class ReportQueueSender implements ReportSender {
     @Value("${spring.rabbitmq.routing.key}")
     String routingKey;
 
-    @Override
     public void sendReport(String message) {
         rabbitTemplate.convertAndSend(exchangeName, routingKey, message);
         System.out.println("Sent cdr: " + message);

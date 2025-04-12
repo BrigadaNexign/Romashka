@@ -1,81 +1,73 @@
 package org.example.service.fragment;
 
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.example.entity.Fragment;
-import org.example.util.FragmentBlockingQueue;
+import org.example.entity.Subscriber;
+import org.example.service.subscriber.SubscriberService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Random;
 
-/**
- * Сервис для генерации Fragment записей.
- * Предоставляет методы для создания Fragment записей для абонентов за определенный период.
- */
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class FragmentGenerator {
 
     @Autowired
-    private FragmentServiceImpl cdrService;
+    private FragmentService fragmentService;
 
     @Autowired
     private FragmentEditor fragmentEditor;
 
     @Autowired
-    private RandomFragmentGenerator randomFragmentGenerator;
+    private SubscriberService subscriberService;
 
     private final Random random = new Random();
+    private List<Subscriber> subscribersList;
 
-    private final FragmentBlockingQueue fragmentQueue;
+    private static final int MAX_GENERATION_ATTEMPTS = 10;
 
-    public void generateAndPutToQueue() {
-        try {
-            LocalDateTime startTime = LocalDateTime.now().minusYears(1);
-            LocalDateTime endTime = LocalDateTime.now();
 
-            while (startTime.isBefore(endTime)) {
-                startTime = generateFragment(startTime);
-                // fragmentQueue.put(Optional.of(fragment));
-                // startTime = startTime.plusMinutes(random.nextInt(60));
+    public Fragment generateConflictFreeFragment(LocalDateTime startTime) {
+        subscribersList = subscriberService.fetchSubscriberList();
+
+        if (subscribersList == null || subscribersList.isEmpty()) {
+            throw new IllegalStateException("No subscribers available for Fragment generation");
+        }
+
+        Subscriber subscriber = subscribersList.get(random.nextInt(subscribersList.size()));
+        String caller = subscriber.getMsisdn();
+        String receiver = getRandomReceiverMsisdn(caller);
+
+        for (int i = 0; i < MAX_GENERATION_ATTEMPTS; i++) {
+            LocalDateTime endTime = startTime.plusSeconds(random.nextInt(3600));
+
+            if (endTime.isBefore(startTime)) {
+                throw new IllegalStateException("Generated invalid time range: endTime before startTime");
             }
-            //fragmentQueue.put(Optional.empty());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Fragment records generation interrupted", e);
+
+            if (!fragmentService.hasConflictingCalls(caller, receiver, startTime, endTime)) {
+                return fragmentEditor.createFragment(random.nextBoolean() ? "01" : "02", caller, receiver, startTime, endTime);
+            }
+
+            startTime = endTime.plusSeconds(1);
         }
+        throw new IllegalStateException(String.format(
+                "Failed to create conflict-free Fragment after %d attempts for subscriber %s",
+                MAX_GENERATION_ATTEMPTS, caller));
     }
 
-    public LocalDateTime generateFragment(LocalDateTime startTime) throws InterruptedException {
-        Fragment fragment = randomFragmentGenerator.generateConflictFreeFragment(startTime);
+    public String getRandomReceiverMsisdn(String callerMsisdn) throws IllegalStateException {
+        List<Subscriber> possibleReceivers = subscribersList.stream()
+                .filter(s -> !s.getMsisdn().equals(callerMsisdn))
+                .toList();
 
-        if (checkMidnight(fragment)) {
-            splitMidnightFragment(fragment);
-        } else {
-            putToQueueAndSave(fragment);
+        if (possibleReceivers.isEmpty()) {
+            throw new IllegalStateException("No available receivers for caller: " + callerMsisdn);
         }
 
-        return startTime.plusMinutes(1 + random.nextInt(59));
-    }
-
-    public void splitMidnightFragment(Fragment fragment) throws InterruptedException {
-        putToQueueAndSave(
-                fragmentEditor.splitFragmentBeforeMidnight(fragment)
-        );
-
-        putToQueueAndSave(
-                fragmentEditor.splitFragmentAfterMidnight(fragment)
-        );
-    }
-
-    public void putToQueueAndSave(Fragment fragment) throws InterruptedException {
-        fragmentQueue.put(fragment);
-        cdrService.saveCDR(fragment);
-    }
-
-    private boolean checkMidnight(Fragment fragment) {
-        return fragment.getStartTime().getDayOfYear() != fragment.getEndTime().getDayOfYear()
-                || !fragment.getStartTime().toLocalDate().equals(fragment.getEndTime().toLocalDate());
+        return possibleReceivers.get(random.nextInt(possibleReceivers.size())).getMsisdn();
     }
 }

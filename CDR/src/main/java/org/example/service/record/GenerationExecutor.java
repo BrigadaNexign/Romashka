@@ -1,6 +1,6 @@
-package org.example.service.CDR;
+package org.example.service.record;
 
-import org.example.service.fragment.FragmentGenerator;
+import org.example.service.fragment.FragmentProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,7 +12,7 @@ public class GenerationExecutor {
     private ExecutorService executorService;
 
     @Autowired
-    private FragmentGenerator fragmentGenerator;
+    private FragmentProcessor fragmentProcessor;
 
     @Autowired
     private RecordProcessor recordProcessor;
@@ -22,7 +22,7 @@ public class GenerationExecutor {
     public void generateAllBatches() {
         executorService = Executors.newFixedThreadPool(2);
         try {
-            Future<?> generationFuture = executorService.submit(fragmentGenerator::generateAndPutToQueue);
+            Future<?> generationFuture = executorService.submit(fragmentProcessor::generateAndPutToQueue);
             Future<?> processingFuture = executorService.submit(recordProcessor::processCdrQueue);
 
             generationFuture.get();
