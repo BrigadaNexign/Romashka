@@ -1,4 +1,4 @@
-package org.example.service.CDR;
+package org.example.service.record;
 
 import lombok.AllArgsConstructor;
 import org.example.entity.Fragment;
@@ -45,10 +45,9 @@ public class RecordProcessor {
                 }
 
                 buffer.add(cdrOpt.get());
-                if (buffer.size() >= RECORDS_PER_FILE) {
-                    writeSortedBatchToFile(buffer);
-                    buffer = new ArrayList<>(RECORDS_PER_FILE);
 
+                if (buffer.size() >= RECORDS_PER_FILE) {
+                    buffer = processBatch(buffer);
                 }
             }
         } catch (InterruptedException e) {
@@ -59,9 +58,16 @@ public class RecordProcessor {
         }
     }
 
-    private void writeSortedBatchToFile(List<Fragment> fragments) throws IOException {
-        fragments.sort(Comparator.comparing(Fragment::getStartTime));
+    private List<Fragment> processBatch(List<Fragment> buffer) throws IOException {
+        buffer.sort(Comparator.comparing(Fragment::getStartTime));
 
+        writeSortedBatchToFile(buffer);
+        reportQueueSender.sendReport(recordToMessage(buffer));
+
+        return new ArrayList<>(RECORDS_PER_FILE);
+    }
+
+    private void writeSortedBatchToFile(List<Fragment> fragments) throws IOException {
         Path reports = Paths.get("reports");
         if (!Files.exists(reports)) {
             Files.createDirectories(reports);
@@ -69,7 +75,6 @@ public class RecordProcessor {
 
         String filename = "reports/cdr_batch_" + fileCounter.getAndIncrement() + ".txt";
 
-        reportQueueSender.sendReport(recordToMessage(fragments));
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
             for (Fragment fragment : fragments) {
                 writer.write(fragmentEditor.formatFragment(fragment));

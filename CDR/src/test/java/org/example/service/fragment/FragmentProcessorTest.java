@@ -1,6 +1,6 @@
 package org.example.service.fragment;
 
-import org.example.service.subscriber.SubscriberServiceImpl;
+import org.example.service.subscriber.SubscriberService;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -11,16 +11,16 @@ import org.springframework.test.context.ActiveProfiles;
 
 @ActiveProfiles("test")
 @DataJpaTest
-class FragmentGeneratorTest {
+class FragmentProcessorTest {
 
     @Mock
-    private FragmentServiceImpl cdrService;
+    private FragmentService cdrService;
 
     @Mock
-    private SubscriberServiceImpl subscriberService;
+    private SubscriberService subscriberService;
 
     @InjectMocks
-    private FragmentGenerator fragmentGenerator;
+    private FragmentProcessor fragmentProcessor;
 
     @BeforeEach
     void setUp() {
@@ -38,7 +38,7 @@ class FragmentGeneratorTest {
 //        when(subscriberService.fetchSubscriberList()).thenReturn(List.of(subscriber1, subscriber2));
 //        when(cdrService.saveCDR(any(Fragment.class))).thenReturn(new Fragment());
 //
-//        fragmentGenerator.generateCDRsForYear();
+//        fragmentProcessor.generateCDRsForYear();
 //
 //        verify(cdrService, atLeast(2)).saveCDR(any(Fragment.class));
 //    }
@@ -56,7 +56,7 @@ class FragmentGeneratorTest {
 //        LocalDateTime startTime = LocalDateTime.now();
 //        when(cdrService.saveCDR(any(Fragment.class))).thenReturn(new Fragment());
 //
-//        fragmentGenerator.generateCDRForSubscriber(subscriber1, startTime);
+//        fragmentProcessor.generateCDRForSubscriber(subscriber1, startTime);
 //
 //        verify(cdrService, times(1)).saveCDR(any(Fragment.class));
 //    }

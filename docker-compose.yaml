@@ -67,6 +67,19 @@ services:
     ports:
       - "8080:8080"
 
+  brt:
+    build: BRT/
+    container_name: brt
+    depends_on:
+      - postgres
+      - rabbitmq
+      - liquibase
+      - cdr
+    networks:
+      - romashka-network
+    ports:
+      - "8081:8081"
+
 
 networks:
   romashka-network:

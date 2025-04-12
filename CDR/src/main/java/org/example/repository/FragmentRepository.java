@@ -14,7 +14,7 @@ import java.util.List;
  *
  * @see Fragment
  */
-public interface CDRRepository extends JpaRepository<Fragment, Long> {
+public interface FragmentRepository extends JpaRepository<Fragment, Long> {
 
     /**
      * Удаляет запись Fragment по её идентификатору.

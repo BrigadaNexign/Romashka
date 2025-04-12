@@ -1,3 +1,4 @@
 rootProject.name = 'Romashka'
 include 'CDR'
+include 'BRT'
 
