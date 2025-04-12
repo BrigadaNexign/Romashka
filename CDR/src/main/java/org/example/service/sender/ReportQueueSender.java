@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 public class ReportQueueSender {
     @Autowired
     private final RabbitTemplate rabbitTemplate;
-    @Value("${spring.rabbitmq.queue.name}")
+    @Value("${spring.rabbitmq.exchange.name}")
     String exchangeName;
     @Value("${spring.rabbitmq.routing.key}")
     String routingKey;

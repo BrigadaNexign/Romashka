@@ -34,15 +34,16 @@ public class SubscriberService {
                 "79991113355", "79992224466", "79993335577", "79994446688",
                 "79995557799", "79996668800", "79997779911", "79998880022",
                 "79990001133", "79991112244", "79992223355", "79993334466",
-                "79994445577", "79995556688", "79996667799", "79997778800",
-                "79998889911", "79999990022", "79990001144", "79991113366",
-                "79992224477", "79993335588", "79994446699", "79995557700",
-                "79996668811", "79997779922", "79998880033", "79999991144"
+                "79994445577", "79995556688", "79906667799", "79907778800",
+                "79908889911", "79909990022", "79900001144", "79901113366",
+                "79902224477", "79903335588", "79904446699", "79905557700",
+                "79906668811", "79907779922", "79908880033", "79909991144"
         );
 
         for (String msisdn : msisdns) {
             Subscriber subscriber = new Subscriber();
             subscriber.setMsisdn(msisdn);
+            subscriber.setType(msisdn.startsWith("7999"));
             saveSubscriber(subscriber);
         }
     }
@@ -54,6 +55,10 @@ public class SubscriberService {
     public List<Subscriber> fetchSubscriberList() {
         return subscriberRepository.findAll();
     }
+
+    public List<Subscriber> fetchOurSubscriberList() { return subscriberRepository.findByType(Boolean.TRUE); }
+
+    public List<Subscriber> fetchForeignSubscriberList() { return subscriberRepository.findByType(Boolean.FALSE); }
 
     public void deleteSubscriberByID(String msisdn) {
         subscriberRepository.deleteById(msisdn);

@@ -25,28 +25,26 @@ public class FragmentGenerator {
     private SubscriberService subscriberService;
 
     private final Random random = new Random();
-    private List<Subscriber> subscribersList;
+
+    private List<Subscriber> ourSubscriberList;
+    private List<Subscriber> subscriberList;
 
     private static final int MAX_GENERATION_ATTEMPTS = 10;
 
 
     public Fragment generateConflictFreeFragment(LocalDateTime startTime) {
-        subscribersList = subscriberService.fetchSubscriberList();
+        ourSubscriberList = subscriberService.fetchOurSubscriberList();
 
-        if (subscribersList == null || subscribersList.isEmpty()) {
+        if (ourSubscriberList == null || ourSubscriberList.isEmpty()) {
             throw new IllegalStateException("No subscribers available for Fragment generation");
         }
 
-        Subscriber subscriber = subscribersList.get(random.nextInt(subscribersList.size()));
+        Subscriber subscriber = ourSubscriberList.get(random.nextInt(ourSubscriberList.size()));
         String caller = subscriber.getMsisdn();
         String receiver = getRandomReceiverMsisdn(caller);
 
         for (int i = 0; i < MAX_GENERATION_ATTEMPTS; i++) {
             LocalDateTime endTime = startTime.plusSeconds(random.nextInt(3600));
-
-            if (endTime.isBefore(startTime)) {
-                throw new IllegalStateException("Generated invalid time range: endTime before startTime");
-            }
 
             if (!fragmentService.hasConflictingCalls(caller, receiver, startTime, endTime)) {
                 return fragmentEditor.createFragment(random.nextBoolean() ? "01" : "02", caller, receiver, startTime, endTime);
@@ -54,13 +52,15 @@ public class FragmentGenerator {
 
             startTime = endTime.plusSeconds(1);
         }
+
         throw new IllegalStateException(String.format(
                 "Failed to create conflict-free Fragment after %d attempts for subscriber %s",
                 MAX_GENERATION_ATTEMPTS, caller));
     }
 
     public String getRandomReceiverMsisdn(String callerMsisdn) throws IllegalStateException {
-        List<Subscriber> possibleReceivers = subscribersList.stream()
+        subscriberList = subscriberService.fetchSubscriberList();
+        List<Subscriber> possibleReceivers = subscriberList.stream()
                 .filter(s -> !s.getMsisdn().equals(callerMsisdn))
                 .toList();
 

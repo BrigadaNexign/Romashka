@@ -2,7 +2,7 @@ package org.example.service.fragment;
 
 import lombok.AllArgsConstructor;
 import org.example.entity.Fragment;
-import org.example.repository.CDRRepository;
+import org.example.repository.FragmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,30 +17,30 @@ import java.util.*;
 @AllArgsConstructor
 public class FragmentService {
     @Autowired
-    private final CDRRepository cdrRepository;
+    private final FragmentRepository fragmentRepository;
 
     public Fragment saveCDR(Fragment fragment) {
-        return cdrRepository.save(fragment);
+        return fragmentRepository.save(fragment);
     }
 
     public List<Fragment> fetchCDRList() {
-        return cdrRepository.findAll();
+        return fragmentRepository.findAll();
     }
 
     public void deleteCDRByID(Long CDRId) {
-        cdrRepository.deleteById(CDRId);
+        fragmentRepository.deleteById(CDRId);
     }
 
     public List<Fragment> fetchCDRListByMsisdn(String callerMsisdn, String receiverMsisdn) {
-        return cdrRepository.findByCallerMsisdnOrReceiverMsisdn(callerMsisdn, receiverMsisdn);
+        return fragmentRepository.findByCallerMsisdnOrReceiverMsisdn(callerMsisdn, receiverMsisdn);
     }
 
     public <S extends Fragment> List<S> saveAllFragments(Iterable<S> entities) {
-        return cdrRepository.saveAll(entities);
+        return fragmentRepository.saveAll(entities);
     }
 
     public List<Fragment> fetchCDRListByMsisdnAndTime(String msisdn, LocalDateTime startOfMonth, LocalDateTime endOfMonth) {
-        return cdrRepository.findByCallerMsisdnOrReceiverMsisdnAndStartTimeBetween(
+        return fragmentRepository.findByCallerMsisdnOrReceiverMsisdnAndStartTimeBetween(
                 msisdn, startOfMonth, endOfMonth
         );
     }
@@ -51,6 +51,6 @@ public class FragmentService {
             LocalDateTime start,
             LocalDateTime end
     ) {
-        return cdrRepository.existsConflictingCalls(caller, receiver, start, end);
+        return fragmentRepository.existsConflictingCalls(caller, receiver, start, end);
     }
 }

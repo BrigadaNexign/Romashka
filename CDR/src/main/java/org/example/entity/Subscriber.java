@@ -12,9 +12,8 @@ import lombok.Data;
 @Entity
 public class Subscriber {
 
-    /**
-     * Номер абонента, используемый как уникальный идентификатор.
-     */
     @Id
     private String msisdn;
+
+    private boolean type;
 }

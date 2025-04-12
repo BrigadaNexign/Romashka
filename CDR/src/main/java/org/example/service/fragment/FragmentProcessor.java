@@ -2,6 +2,8 @@ package org.example.service.fragment;
 
 import lombok.RequiredArgsConstructor;
 import org.example.entity.Fragment;
+import org.example.entity.Subscriber;
+import org.example.service.subscriber.SubscriberService;
 import org.example.util.FragmentBlockingQueue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,7 +20,7 @@ import java.util.*;
 public class FragmentProcessor {
 
     @Autowired
-    private FragmentService cdrService;
+    private FragmentService fragmentService;
 
     @Autowired
     private FragmentEditor fragmentEditor;
@@ -26,17 +28,25 @@ public class FragmentProcessor {
     @Autowired
     private FragmentGenerator fragmentGenerator;
 
+    @Autowired
+    private SubscriberService subscriberService;
+
     private final Random random = new Random();
 
     private final FragmentBlockingQueue fragmentQueue;
+    
+    private List<Subscriber> ourSubscriberList;
+    private List<Subscriber> subscriberList;
 
-    public void generateAndPutToQueue() {
+    private static final int years = 1;
+
+    public void createForYears() {
         try {
-            LocalDateTime startTime = LocalDateTime.now().minusYears(1);
+            LocalDateTime startTime = LocalDateTime.now().minusYears(years);
             LocalDateTime endTime = LocalDateTime.now();
 
             while (startTime.isBefore(endTime)) {
-                startTime = generateFragment(startTime);
+                startTime = createFragment(startTime);
                 // fragmentQueue.put(Optional.of(fragment));
                 // startTime = startTime.plusMinutes(random.nextInt(60));
             }
@@ -47,19 +57,42 @@ public class FragmentProcessor {
         }
     }
 
-    public LocalDateTime generateFragment(LocalDateTime startTime) throws InterruptedException {
-        Fragment fragment = fragmentGenerator.generateConflictFreeFragment(startTime);
+    public LocalDateTime createFragment(LocalDateTime startTime) throws InterruptedException {
+        Fragment firstFragment = fragmentGenerator.generateConflictFreeFragment(startTime);
 
-        if (checkMidnight(fragment)) {
-            splitMidnightFragment(fragment);
-        } else {
-            putToQueueAndSave(fragment);
+        if (checkIfOurReceiver(firstFragment.getReceiverMsisdn())) {
+            Fragment secondFragment = fragmentEditor.createFragment(
+                    firstFragment.getCallType().equals("01") ? "02" : "01",
+                    firstFragment.getReceiverMsisdn(),
+                    firstFragment.getCallerMsisdn(),
+                    firstFragment.getStartTime(),
+                    firstFragment.getEndTime()
+            );
+            processFragment(secondFragment);
         }
+
+        processFragment(firstFragment);
 
         return startTime.plusMinutes(1 + random.nextInt(59));
     }
 
-    public void splitMidnightFragment(Fragment fragment) throws InterruptedException {
+
+    private void processFragment(Fragment fragment) throws InterruptedException {
+        if (checkMidnight(fragment)) {
+            splitMidnightFragmentAndSave(fragment);
+        } else {
+            putToQueueAndSave(fragment);
+        }
+    }
+
+    private boolean checkIfOurReceiver(String receiverMsisdn) {
+        ourSubscriberList = subscriberService.fetchOurSubscriberList();
+        Optional<Subscriber> ourSubscriber = ourSubscriberList.stream()
+                .filter(s -> s.getMsisdn().equals(receiverMsisdn)).findFirst();
+        return ourSubscriber.isPresent();
+    }
+
+    public void splitMidnightFragmentAndSave(Fragment fragment) throws InterruptedException {
         putToQueueAndSave(
                 fragmentEditor.splitFragmentBeforeMidnight(fragment)
         );
@@ -71,7 +104,7 @@ public class FragmentProcessor {
 
     public void putToQueueAndSave(Fragment fragment) throws InterruptedException {
         fragmentQueue.put(fragment);
-        cdrService.saveCDR(fragment);
+        fragmentService.saveCDR(fragment);
     }
 
     private boolean checkMidnight(Fragment fragment) {

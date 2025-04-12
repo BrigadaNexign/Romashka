@@ -22,7 +22,7 @@ public class GenerationExecutor {
     public void generateAllBatches() {
         executorService = Executors.newFixedThreadPool(2);
         try {
-            Future<?> generationFuture = executorService.submit(fragmentProcessor::generateAndPutToQueue);
+            Future<?> generationFuture = executorService.submit(fragmentProcessor::createForYears);
             Future<?> processingFuture = executorService.submit(recordProcessor::processCdrQueue);
 
             generationFuture.get();
