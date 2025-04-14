@@ -6,7 +6,6 @@ CREATE TABLE "users_saved" (
 	"balance"	NUMERIC(10, 2) NOT NULL,
 	"registration_date"	DATE NOT NULL,
 	PRIMARY KEY("user_id" AUTOINCREMENT),
-	FOREIGN KEY("tariff_id") REFERENCES "tariffs"("tariff_id") ON DELETE SET NULL
 );
 
 CREATE TABLE "user_params" (
