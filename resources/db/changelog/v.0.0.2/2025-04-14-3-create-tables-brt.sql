@@ -1,7 +1,7 @@
 CREATE TABLE "users_saved" (
 	"user_id"	INTEGER NOT NULL UNIQUE,
 	"user_name"	TEXT NOT NULL,
-	"tariff_id"	INTEGER NOT NULL,
+	"tariff_id"	INTEGER,
 	"msisdn"	CHAR(11) NOT NULL UNIQUE,
 	"balance"	NUMERIC(10, 2) NOT NULL,
 	"registration_date"	DATE NOT NULL,
