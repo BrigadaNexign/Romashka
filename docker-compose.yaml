@@ -23,8 +23,7 @@ services:
     hostname: rabbitmq
     container_name: rabbitmq
     volumes:
-      - ${PWD}/resources/rabbitmq_data:/var/lib/rabbitmq  # Только данные
-      - ${PWD}/infrastructure/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json  # Конфиг
+      - ./infrastructure/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -45,14 +44,13 @@ services:
     image: liquibase/liquibase
     container_name: liquibase
     volumes:
-      - ${PWD}/resources/db/changelog/changelog_master.xml:/liquibase/changelog_master.xml
-      - ${PWD}/resources/db/changelog/v.0.0.1:/liquibase/v.0.0.1
+      - ./resources/db/changelog/changelog_master.xml:/liquibase/changelog_master.xml
+      - ./resources/db/changelog/v.0.0.1:/liquibase/v.0.0.1
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - romashka-network
-    # Автоматически применяет миграции при старте
     command: --url="jdbc:postgresql://postgres_db:5432/users_db" --username=admin --password=admin --changeLogFile=changelog_master.xml update
 
   cdr:
@@ -79,7 +77,6 @@ services:
       - romashka-network
     ports:
       - "8081:8081"
-
 
 networks:
   romashka-network:

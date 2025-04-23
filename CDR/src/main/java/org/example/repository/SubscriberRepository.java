@@ -20,7 +20,4 @@ public interface SubscriberRepository extends JpaRepository<Subscriber, String> 
      * @param msisdn идентификатор абонента
      */
     void deleteById(String msisdn);
-
-
-    List<Subscriber> findByType( @Param("type") Boolean type );
 }
