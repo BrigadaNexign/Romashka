@@ -122,6 +122,7 @@ public class RecordGenerator {
     }
 
     private void sendCDRFile(List<Fragment> fragments) {
+        if (fragments.size() < 10) return;
         String cdrFileContent = fragments.stream()
                 .map(fragmentEditor::formatFragment)
                 .collect(Collectors.joining("\n"));
