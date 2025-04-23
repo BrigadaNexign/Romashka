@@ -11,33 +11,6 @@ import java.time.format.DateTimeFormatter;
 @RequiredArgsConstructor
 public class FragmentEditor {
 
-
-    public Fragment splitFragmentBeforeMidnight(Fragment fragment) {
-        LocalDateTime midnight = fragment.getStartTime().toLocalDate().plusDays(1).atStartOfDay();
-
-        return createFragment(
-                fragment.getCallType(),
-                fragment.getCallerMsisdn(),
-                fragment.getReceiverMsisdn(),
-                fragment.getStartTime(),
-                midnight.minusSeconds(1)
-        );
-
-    }
-
-    public Fragment splitFragmentAfterMidnight(Fragment fragment) {
-        LocalDateTime midnight = fragment.getStartTime().toLocalDate().plusDays(1).atStartOfDay();
-
-        return createFragment(
-                fragment.getCallType(),
-                fragment.getCallerMsisdn(),
-                fragment.getReceiverMsisdn(),
-                midnight.plusSeconds(0),
-                fragment.getEndTime()
-        );
-
-    }
-
     public Fragment createFragment(
             String callType,
             String callerMsisdn,

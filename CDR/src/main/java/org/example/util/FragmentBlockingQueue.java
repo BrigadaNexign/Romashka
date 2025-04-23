@@ -13,17 +13,10 @@ import java.util.concurrent.locks.ReentrantLock;
 @Component
 public class FragmentBlockingQueue {
     private final Queue<Optional<Fragment>> queue = new LinkedList<>();
-    private final int capacity;
+    private final static int capacity = 1000;
     private final Lock lock = new ReentrantLock();
     private final Condition notFull = lock.newCondition();
     private final Condition notEmpty = lock.newCondition();
-
-    public FragmentBlockingQueue(int capacity) {
-        if (capacity <= 0) {
-            throw new IllegalArgumentException("Capacity must be positive");
-        }
-        this.capacity = capacity;
-    }
 
     public void put(Fragment fragment) throws InterruptedException {
         put(Optional.ofNullable(fragment));
