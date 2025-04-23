@@ -1,4 +1,4 @@
-package org.example.entity;
+package rom.cdr.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;

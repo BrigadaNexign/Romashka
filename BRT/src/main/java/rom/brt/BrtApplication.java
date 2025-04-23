@@ -1,4 +1,4 @@
-package com.example;
+package rom.brt;
 
 import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.boot.SpringApplication;

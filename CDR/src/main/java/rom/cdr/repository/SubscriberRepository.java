@@ -1,16 +1,13 @@
-package org.example.repository;
+package rom.cdr.repository;
 
-import org.example.entity.Subscriber;
+import rom.cdr.entity.Subscriber;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.repository.query.Param;
-
-import java.util.List;
 
 /**
  * Репозиторий для работы с абонентами.
  * Предоставляет методы для выполнения операций с базой данных, связанных с абонентами.
  *
- * @see org.example.entity.Subscriber
+ * @see Subscriber
  */
 public interface SubscriberRepository extends JpaRepository<Subscriber, String> {
 

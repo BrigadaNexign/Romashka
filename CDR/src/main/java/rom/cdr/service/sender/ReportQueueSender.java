@@ -1,4 +1,4 @@
-package org.example.service.sender;
+package rom.cdr.service.sender;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

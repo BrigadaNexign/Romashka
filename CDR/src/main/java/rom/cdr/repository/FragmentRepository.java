@@ -1,6 +1,6 @@
-package org.example.repository;
+package rom.cdr.repository;
 
-import org.example.entity.Fragment;
+import rom.cdr.entity.Fragment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

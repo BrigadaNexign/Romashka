@@ -1,7 +1,7 @@
-package org.example.service.fragment;
+package rom.cdr.service.fragment;
 
 import lombok.RequiredArgsConstructor;
-import org.example.entity.Fragment;
+import rom.cdr.entity.Fragment;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

@@ -1,8 +1,8 @@
-package org.example.service.fragment;
+package rom.cdr.service.fragment;
 
 import lombok.AllArgsConstructor;
-import org.example.entity.Fragment;
-import org.example.repository.FragmentRepository;
+import rom.cdr.entity.Fragment;
+import rom.cdr.repository.FragmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,24 +25,6 @@ public class FragmentService {
 
     public List<Fragment> fetchCDRList() {
         return fragmentRepository.findAll();
-    }
-
-    public void deleteCDRByID(Long CDRId) {
-        fragmentRepository.deleteById(CDRId);
-    }
-
-    public List<Fragment> fetchCDRListByMsisdn(String callerMsisdn, String receiverMsisdn) {
-        return fragmentRepository.findByCallerMsisdnOrReceiverMsisdn(callerMsisdn, receiverMsisdn);
-    }
-
-    public <S extends Fragment> List<S> saveAllFragments(Iterable<S> entities) {
-        return fragmentRepository.saveAll(entities);
-    }
-
-    public List<Fragment> fetchCDRListByMsisdnAndTime(String msisdn, LocalDateTime startOfMonth, LocalDateTime endOfMonth) {
-        return fragmentRepository.findByCallerMsisdnOrReceiverMsisdnAndStartTimeBetween(
-                msisdn, startOfMonth, endOfMonth
-        );
     }
 
     public boolean hasConflictingCalls(

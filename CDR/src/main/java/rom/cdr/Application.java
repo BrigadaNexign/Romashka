@@ -1,6 +1,6 @@
-package org.example;
+package rom.cdr;
 
-import org.example.service.record.RecordGenerator;
+import rom.cdr.service.record.RecordGenerator;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;

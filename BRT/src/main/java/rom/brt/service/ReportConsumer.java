@@ -1,4 +1,4 @@
-package com.example.service;
+package rom.brt.service;
 
 import lombok.AllArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;

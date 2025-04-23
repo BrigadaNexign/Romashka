@@ -1,6 +1,6 @@
-package com.example.service;
+package rom.brt.service;
 
-import com.example.dto.Fragment;
+import rom.brt.dto.Fragment;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 

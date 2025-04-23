@@ -1,10 +1,10 @@
-package org.example.service.record;
+package rom.cdr.service.record;
 
-import org.example.entity.Fragment;
-import org.example.service.fragment.FragmentEditor;
-import org.example.service.fragment.FragmentService;
-import org.example.service.sender.ReportQueueSender;
-import org.example.service.subscriber.SubscriberService;
+import rom.cdr.entity.Fragment;
+import rom.cdr.service.fragment.FragmentEditor;
+import rom.cdr.service.fragment.FragmentService;
+import rom.cdr.service.sender.ReportQueueSender;
+import rom.cdr.service.subscriber.SubscriberService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;

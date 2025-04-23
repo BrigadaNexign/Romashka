@@ -1,8 +1,8 @@
-package org.example.service.subscriber;
+package rom.cdr.service.subscriber;
 
 import jakarta.annotation.PostConstruct;
-import org.example.entity.Subscriber;
-import org.example.repository.SubscriberRepository;
+import rom.cdr.entity.Subscriber;
+import rom.cdr.repository.SubscriberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
