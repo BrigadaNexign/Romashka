@@ -15,5 +15,4 @@ public class Subscriber {
     @Id
     private String msisdn;
 
-    private boolean type;
 }

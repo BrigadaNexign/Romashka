@@ -1,6 +1,7 @@
 package org.example;
 
 import org.example.service.record.GenerationExecutor;
+import org.example.service.record.RecordGenerator;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -22,7 +23,7 @@ public class Application {
      */
     public static void main(String[] args) {
         ApplicationContext context = new AnnotationConfigApplicationContext(Application.class);
-        GenerationExecutor executor = context.getBean(GenerationExecutor.class);
-        executor.generateAllBatches();
+        RecordGenerator executor = context.getBean(RecordGenerator.class);
+        executor.generateCDRData(1);
     }
 }

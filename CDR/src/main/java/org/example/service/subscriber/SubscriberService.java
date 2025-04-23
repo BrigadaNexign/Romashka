@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Реализация сервиса для работы с абонентами.
@@ -43,7 +44,6 @@ public class SubscriberService {
         for (String msisdn : msisdns) {
             Subscriber subscriber = new Subscriber();
             subscriber.setMsisdn(msisdn);
-            subscriber.setType(msisdn.startsWith("7999"));
             saveSubscriber(subscriber);
         }
     }
@@ -56,11 +56,9 @@ public class SubscriberService {
         return subscriberRepository.findAll();
     }
 
-    public List<Subscriber> fetchOurSubscriberList() { return subscriberRepository.findByType(Boolean.TRUE); }
-
-    public List<Subscriber> fetchForeignSubscriberList() { return subscriberRepository.findByType(Boolean.FALSE); }
-
-    public void deleteSubscriberByID(String msisdn) {
-        subscriberRepository.deleteById(msisdn);
+    public List<String> getAllMsisdns() {
+        return subscriberRepository.findAll().stream()
+                .map(Subscriber::getMsisdn)
+                .collect(Collectors.toList());
     }
 }
