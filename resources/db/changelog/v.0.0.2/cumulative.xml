@@ -8,6 +8,6 @@
     <include file="2025-04-14-3-create-tables-brt.sql" relativeToChangelogFile="true" />
     <include file="2025-04-14-4-fill-tables-brt.sql" relativeToChangelogFile="true" />
     <include file="2025-04-14-5-create-tables-cdr.sql" relativeToChangelogFile="true" />
-    <include file="2025-04-14-6-fill-tables-cdr.sql" relativeToChangelogFile="true" />
+    <include file="2025-04-14-6-fill-users-cdr.sql" relativeToChangelogFile="true" />
 
 </databaseChangeLog>
