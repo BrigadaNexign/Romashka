@@ -4,17 +4,11 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
-group = 'com.example'
-version = 'unspecified'
+group = 'rom.brt'
+version = '0.0.1'
 
 repositories {
     mavenCentral()
-}
-
-jar {
-    manifest {
-        attributes 'Main-Class': 'com.example.Application'
-    }
 }
 
 configurations {
@@ -29,12 +23,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     compileOnly 'org.projectlombok:lombok'
-    runtimeOnly 'com.h2database:h2'
     runtimeOnly 'org.postgresql:postgresql'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.2.1")
 }
 
 //task wrapper(type: Wrapper){

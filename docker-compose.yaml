@@ -45,13 +45,15 @@ services:
     container_name: liquibase
     volumes:
       - ./resources/db/changelog/changelog_master.xml:/liquibase/changelog_master.xml
-      - ./resources/db/changelog/v.0.0.1:/liquibase/v.0.0.1
+      - ./resources/db/changelog/v.0.0.2:/liquibase/v.0.0.2
+      - ./resources/db/changelog/v.0.0.3:/liquibase/v.0.0.3
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - romashka-network
-    command: --url="jdbc:postgresql://postgres_db:5432/users_db" --username=admin --password=admin --changeLogFile=changelog_master.xml update
+    # Автоматически применяет миграции при старте
+    command: --url="jdbc:postgresql://postgres_db:5432/${DB_NAME}" --username=${DB_USER} --password=${DB_PASSWORD} --changeLogFile=changelog_master.xml update
 
   cdr:
     build: CDR/
@@ -60,6 +62,8 @@ services:
       - postgres
       - rabbitmq
       - liquibase
+      - brt
+      - hrs
     networks:
       - romashka-network
     ports:
@@ -72,11 +76,23 @@ services:
       - postgres
       - rabbitmq
       - liquibase
-      - cdr
+      - hrs
     networks:
       - romashka-network
     ports:
       - "8081:8081"
+
+  hrs:
+    build: HRS/
+    container_name: hrs
+    depends_on:
+      - postgres
+      - rabbitmq
+      - liquibase
+    networks:
+      - romashka-network
+    ports:
+      - "8082:8082"
 
 networks:
   romashka-network:
