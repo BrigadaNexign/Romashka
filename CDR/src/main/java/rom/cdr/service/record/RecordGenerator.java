@@ -81,7 +81,7 @@ public class RecordGenerator {
                 });
 
                 fragmentFutures.add(future);
-                currentStart = callEndTime.plusMinutes(random.nextInt(120));
+                currentStart = callEndTime.plusMinutes(random.nextInt(60));
             }
 
             logger.info("Scheduled {} fragment generation tasks", fragmentFutures.size());
@@ -141,19 +141,19 @@ public class RecordGenerator {
                         endTime
                 );
 
-                if (checkAndLogConflicts(firstPart) && checkAndLogConflicts(secondPart)) {
+                if (checkConflicts(firstPart) && checkConflicts(secondPart)) {
                     logger.debug("Saving fragments crossing midnight");
-                    result.add(saveFragmentWithLogging(firstPart));
-                    result.add(saveFragmentWithLogging(createMirrorFragment(firstPart)));
-                    result.add(saveFragmentWithLogging(secondPart));
-                    result.add(saveFragmentWithLogging(createMirrorFragment(secondPart)));
+                    result.add(saveFragment(firstPart));
+                    result.add(saveFragment(createMirrorFragment(firstPart)));
+                    result.add(saveFragment(secondPart));
+                    result.add(saveFragment(createMirrorFragment(secondPart)));
                 }
             } else {
                 Fragment fragment = createRandomFragment(startTime, endTime, msisdns);
-                if (checkAndLogConflicts(fragment)) {
+                if (checkConflicts(fragment)) {
                     logger.debug("Saving single day fragment");
-                    result.add(saveFragmentWithLogging(fragment));
-                    result.add(saveFragmentWithLogging(createMirrorFragment(fragment)));
+                    result.add(saveFragment(fragment));
+                    result.add(saveFragment(createMirrorFragment(fragment)));
                 }
             }
 
@@ -166,7 +166,7 @@ public class RecordGenerator {
         }
     }
 
-    private boolean checkAndLogConflicts(Fragment fragment) {
+    private boolean checkConflicts(Fragment fragment) {
         synchronized(getLockObject(fragment.getCallerMsisdn(), fragment.getReceiverMsisdn())) {
             boolean hasConflict = hasConflicts(fragment);
             if (hasConflict) {
@@ -186,7 +186,7 @@ public class RecordGenerator {
         return (keys[0] + "|" + keys[1]).intern();
     }
 
-    private Fragment saveFragmentWithLogging(Fragment fragment) {
+    private Fragment saveFragment(Fragment fragment) {
         try {
             logger.debug("Saving fragment: {}", fragment);
             Fragment saved = fragmentService.saveCDR(fragment);
@@ -213,15 +213,8 @@ public class RecordGenerator {
     }
 
     private void processAndSendFragments(List<Fragment> fragments) {
-        fragments.stream()
-                .sorted(Comparator.comparing(Fragment::getStartTime))
-                .collect(Collectors.groupingBy(
-                        fragment -> fragment.getStartTime().toLocalDate(),
-                        LinkedHashMap::new,
-                        Collectors.toList()
-                ))
-                .values()
-                .forEach(this::sendBatches);
+        fragments.sort(Comparator.comparing(Fragment::getStartTime));
+        sendBatches(fragments);
     }
 
     private void sendBatches(List<Fragment> dailyFragments) {
