@@ -1,5 +1,6 @@
 package rom.cdr.repository;
 
+import org.springframework.stereotype.Repository;
 import rom.cdr.entity.Fragment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,6 +15,7 @@ import java.util.List;
  *
  * @see Fragment
  */
+@Repository
 public interface FragmentRepository extends JpaRepository<Fragment, Long> {
 
     /**
