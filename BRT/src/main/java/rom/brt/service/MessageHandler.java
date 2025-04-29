@@ -1,6 +1,8 @@
 package rom.brt.service;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import rom.brt.client.HRSClient;
 import rom.brt.dto.*;
@@ -11,17 +13,16 @@ import rom.brt.repository.UserRepository;
 
 import java.math.BigDecimal;
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 
 @Service
 @RequiredArgsConstructor
 public class MessageHandler {
-
     private final HRSClient hrsClient;
     private final UserRepository userRepository;
     private final CallRecordRepository callRecordRepository;
     private final BillingService billingService;
+    private final Logger logger = LoggerFactory.getLogger(MessageHandler.class);
 
     public void handleMessage(String message) {
         Arrays.stream(message.split("\n"))
@@ -35,7 +36,7 @@ public class MessageHandler {
                 processCall(fragment);
             }
         } catch (Exception e) {
-            // Логирование ошибки
+            logger.error(e.getLocalizedMessage());
         }
     }
 
@@ -65,8 +66,7 @@ public class MessageHandler {
                 new Subscriber(receiver.getUserId(), receiver.getMsisdn(), true),
                 durationMinutes,
                 caller.getTariffId(),
-                // TODO: На дату звонка
-                LocalDateTime.now().toLocalDate(),
+                fragment.getStartTime().toLocalDate(),
                 caller.getUserParams().getPaymentDay()
         );
     }
@@ -82,6 +82,7 @@ public class MessageHandler {
         }
 
         saveCallRecord(fragment, response);
+        logger.info("Saved fragment: {}\nResponse: {}", fragment, response);
     }
 
     private void saveCallRecord(Fragment fragment, CalculationResponse response) {
@@ -102,6 +103,6 @@ public class MessageHandler {
     }
 
     private void logRejectedCall(Fragment fragment, String reason) {
-        // Логирование отклоненных вызовов
+        logger.warn("Failed to process fragment {}\nResponse: {}\n", fragment, reason);
     }
 }

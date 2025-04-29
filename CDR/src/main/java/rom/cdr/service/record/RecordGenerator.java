@@ -1,141 +1,244 @@
 package rom.cdr.service.record;
 
+import jakarta.annotation.PreDestroy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
 import rom.cdr.entity.Fragment;
 import rom.cdr.service.fragment.FragmentEditor;
 import rom.cdr.service.fragment.FragmentService;
 import rom.cdr.service.sender.ReportQueueSender;
 import rom.cdr.service.subscriber.SubscriberService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
 public class RecordGenerator {
+    private static final Logger logger = LoggerFactory.getLogger(RecordGenerator.class);
+    private static final int FRAGMENT_GENERATION_THREADS = 10;
     private static final int CDR_BATCH_SIZE = 10;
-    private static final Random random = new Random();
 
-    @Autowired
-    private FragmentService fragmentService;
-    @Autowired
-    private FragmentEditor fragmentEditor;
-    @Autowired
-    private ReportQueueSender reportQueueSender;
-    @Autowired
-    private SubscriberService subscriberService;
+    private final SubscriberService subscriberService;
+    private final FragmentService fragmentService;
+    private final FragmentEditor fragmentEditor;
+    private final ThreadLocalRandom random;
+    private final ExecutorService fragmentExecutor;
+    private final ReportQueueSender reportQueueSender;
 
-    /**
-     * Асинхронно генерирует CDR данные за указанное количество лет
-     *
-     * @param years количество лет для генерации данных
-     */
+    public RecordGenerator(SubscriberService subscriberService,
+                           FragmentService fragmentService,
+                           FragmentEditor fragmentEditor,
+                           ReportQueueSender reportQueueSender) {
+        this.subscriberService = subscriberService;
+        this.fragmentService = fragmentService;
+        this.fragmentEditor = fragmentEditor;
+        this.reportQueueSender = reportQueueSender;
+        this.random = ThreadLocalRandom.current();
+        this.fragmentExecutor = Executors.newFixedThreadPool(FRAGMENT_GENERATION_THREADS,
+                new ThreadFactory() {
+                    private final AtomicInteger counter = new AtomicInteger(1);
+                    @Override
+                    public Thread newThread(Runnable r) {
+                        return new Thread(r, "fragment-gen-" + counter.getAndIncrement());
+                    }
+                });
+    }
+
     @Async
-    public void generateCDRData(int years) {
-        LocalDateTime startTime = LocalDateTime.now().minusYears(years);
-        LocalDateTime endTime = LocalDateTime.now();
+    public CompletableFuture<Void> generateForPeriod(LocalDateTime startTime, LocalDateTime endTime) {
+        logger.info("Starting generation for period: {} - {}", startTime, endTime);
+        long startMs = System.currentTimeMillis();
 
-        List<String> msisdns = subscriberService.getAllMsisdns();
+        try {
+            logger.debug("Retrieving all MSISDNs");
+            List<String> msisdns = subscriberService.getAllMsisdns();
+            logger.info("Retrieved {} MSISDNs for generation", msisdns.size());
 
-        while (startTime.isBefore(endTime)) {
-            generateFragmentWithMidnightCheck(
-                    startTime,
-                    startTime.plusMinutes(1 + random.nextInt(59)),
-                    msisdns
+            List<CompletableFuture<List<Fragment>>> fragmentFutures = new ArrayList<>();
+            LocalDateTime currentStart = startTime;
+
+            while (currentStart.isBefore(endTime)) {
+                LocalDateTime callEndTime = currentStart.plusMinutes(1 + random.nextInt(59));
+                callEndTime = callEndTime.isAfter(endTime) ? endTime : callEndTime;
+
+                logger.debug("Generating fragment for interval: {} - {}", currentStart, callEndTime);
+
+                LocalDateTime finalStart = currentStart;
+                LocalDateTime finalEnd = callEndTime;
+
+                CompletableFuture<List<Fragment>> future = CompletableFuture.supplyAsync(
+                        () -> generateFragmentWithMidnightCheck(finalStart, finalEnd, msisdns),
+                        fragmentExecutor
+                ).exceptionally(e -> {
+                    logger.error("Failed to generate fragment for interval {} - {}: {}",
+                            finalStart, finalEnd, e.getMessage());
+                    return Collections.emptyList();
+                });
+
+                fragmentFutures.add(future);
+                currentStart = callEndTime.plusMinutes(random.nextInt(60));
+            }
+
+            logger.info("Scheduled {} fragment generation tasks", fragmentFutures.size());
+
+            CompletableFuture<Void> allFutures = CompletableFuture.allOf(
+                    fragmentFutures.toArray(new CompletableFuture[0])
             );
 
-            startTime = startTime.plusMinutes(1 + random.nextInt(59));
-        }
+            CompletableFuture<List<Fragment>> combinedFragments = allFutures.thenApply(v -> {
+                List<Fragment> result = fragmentFutures.stream()
+                        .map(CompletableFuture::join)
+                        .flatMap(List::stream)
+                        .collect(Collectors.toList());
+                logger.debug("Combined {} fragments from all tasks", result.size());
+                return result;
+            });
 
-        List<Fragment> allFragments = new ArrayList<>(fragmentService.fetchCDRList());
-        allFragments.sort(Comparator.comparing(Fragment::getStartTime));
+            combinedFragments.thenAccept(fragments -> {
+                try {
+                    logger.info("Processing {} generated fragments", fragments.size());
+                    processAndSendFragments(fragments);
+                    logger.info("Successfully processed fragments. Total duration: {}ms",
+                            System.currentTimeMillis() - startMs);
+                } catch (Exception e) {
+                    logger.error("Failed to process fragments: {}", e.getMessage(), e);
+                }
+            });
 
-        for (int i = 0; i < allFragments.size(); i += CDR_BATCH_SIZE) {
-            int endIndex = Math.min(i + CDR_BATCH_SIZE, allFragments.size());
-            List<Fragment> cdrBatch = allFragments.subList(i, endIndex);
-            sendCDRFile(cdrBatch);
+            return combinedFragments.thenApply(f -> null);
+        } catch (Exception e) {
+            logger.error("Critical error in generateForPeriod: {}", e.getMessage(), e);
+            throw e;
         }
     }
 
-    private void generateFragmentWithMidnightCheck(
+    private List<Fragment> generateFragmentWithMidnightCheck(
+            LocalDateTime startTime,
+            LocalDateTime endTime,
+            List<String> msisdns) {
+        try {
+            logger.debug("Generating fragment between {} and {}", startTime, endTime);
+            List<Fragment> result = new ArrayList<>();
+
+            if (!startTime.toLocalDate().equals(endTime.toLocalDate())) {
+                logger.debug("Fragment crosses midnight");
+                Fragment firstPart = createRandomFragment(
+                        startTime,
+                        startTime.toLocalDate().atTime(23, 59, 59),
+                        msisdns
+                );
+
+                Fragment secondPart = fragmentEditor.createFragment(
+                        firstPart.getCallType(),
+                        firstPart.getCallerMsisdn(),
+                        firstPart.getReceiverMsisdn(),
+                        endTime.toLocalDate().atStartOfDay(),
+                        endTime
+                );
+
+                if (checkConflicts(firstPart) && checkConflicts(secondPart)) {
+                    logger.debug("Saving fragments crossing midnight");
+                    result.add(saveFragment(firstPart));
+                    result.add(saveFragment(createMirrorFragment(firstPart)));
+                    result.add(saveFragment(secondPart));
+                    result.add(saveFragment(createMirrorFragment(secondPart)));
+                }
+            } else {
+                Fragment fragment = createRandomFragment(startTime, endTime, msisdns);
+                if (checkConflicts(fragment)) {
+                    logger.debug("Saving single day fragment");
+                    result.add(saveFragment(fragment));
+                    result.add(saveFragment(createMirrorFragment(fragment)));
+                }
+            }
+
+            logger.debug("Generated {} fragments for interval {} - {}",
+                    result.size(), startTime, endTime);
+            return result;
+        } catch (Exception e) {
+            logger.error("Error in generateFragmentWithMidnightCheck: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    private boolean checkConflicts(Fragment fragment) {
+        synchronized(getLockObject(fragment.getCallerMsisdn(), fragment.getReceiverMsisdn())) {
+            boolean hasConflict = hasConflicts(fragment);
+            if (hasConflict) {
+                logger.warn("Conflict detected for call between {} and {} ({} - {})",
+                        fragment.getCallerMsisdn(),
+                        fragment.getReceiverMsisdn(),
+                        fragment.getStartTime(),
+                        fragment.getEndTime());
+            }
+            return !hasConflict;
+        }
+    }
+
+    private Object getLockObject(String msisdn1, String msisdn2) {
+        String[] keys = {msisdn1, msisdn2};
+        Arrays.sort(keys);
+        return (keys[0] + "|" + keys[1]).intern();
+    }
+
+    private Fragment saveFragment(Fragment fragment) {
+        try {
+            logger.debug("Saving fragment: {}", fragment);
+            Fragment saved = fragmentService.saveCDR(fragment);
+            logger.trace("Fragment saved successfully: {}", saved.getId());
+            return saved;
+        } catch (Exception e) {
+            logger.error("Failed to save fragment: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    private Fragment createRandomFragment(
             LocalDateTime startTime,
             LocalDateTime endTime,
             List<String> msisdns
     ) {
-        if (!startTime.toLocalDate().equals(endTime.toLocalDate())) {
-            Fragment firstPart = fragmentEditor.createFragment(
-                    random.nextBoolean() ? "01" : "02",
-                    getRandomMsisdn(msisdns),
-                    getRandomMsisdn(msisdns),
-                    startTime,
-                    startTime.toLocalDate().atTime(23, 59, 59)
-            );
-
-
-            Fragment secondPart = fragmentEditor.createFragment(
-                    firstPart.getCallType(),
-                    firstPart.getCallerMsisdn(),
-                    firstPart.getReceiverMsisdn(),
-                    endTime.toLocalDate().atStartOfDay(),
-                    endTime
-            );
-
-            checkConflictsAndSaveMidnight(firstPart, secondPart);
-            return;
-        }
-
-        checkConflictsAndSave(
-                fragmentEditor.createFragment(
+        return fragmentEditor.createFragment(
                 random.nextBoolean() ? "01" : "02",
                 getRandomMsisdn(msisdns),
                 getRandomMsisdn(msisdns),
                 startTime,
                 endTime
-            )
         );
     }
 
-    private void checkConflictsAndSaveMidnight(Fragment firstPart, Fragment secondPart) {
-        if (!checkConflicts(firstPart) && !checkConflicts(secondPart)) {
-            fragmentService.saveCDR(firstPart);
-            fragmentService.saveCDR(secondPart);
+    private void processAndSendFragments(List<Fragment> fragments) {
+        fragments.sort(Comparator.comparing(Fragment::getStartTime));
+        sendBatches(fragments);
+    }
 
-            Fragment mirroredFirst = createMirrorFragment(firstPart);
-            Fragment mirroredSecond = createMirrorFragment(secondPart);
+    private void sendBatches(List<Fragment> dailyFragments) {
+        for (int i = 0; i < dailyFragments.size(); i += CDR_BATCH_SIZE) {
+            int endIndex = Math.min(i + CDR_BATCH_SIZE, dailyFragments.size());
+            List<Fragment> batch = dailyFragments.subList(i, endIndex);
 
-            fragmentService.saveCDR(mirroredFirst);
-            fragmentService.saveCDR(mirroredSecond);
+            if (batch.size() >= 10) {
+                String cdrContent = batch.stream()
+                        .map(fragmentEditor::formatFragment)
+                        .collect(Collectors.joining("\n"));
+
+                reportQueueSender.sendReport(cdrContent);
+            }
         }
     }
 
-    private void checkConflictsAndSave(Fragment fragment) {
-        if (!checkConflicts(fragment)) {
-            fragmentService.saveCDR(fragment);
-            Fragment mirroredFragment = createMirrorFragment(fragment);
-            fragmentService.saveCDR(mirroredFragment);
-        }
-    }
-
-    private void sendCDRFile(List<Fragment> fragments) {
-        if (fragments.size() < 10) return;
-        String cdrFileContent = fragments.stream()
-                .map(fragmentEditor::formatFragment)
-                .collect(Collectors.joining("\n"));
-
-        reportQueueSender.sendReport(cdrFileContent);
-    }
-
-    private boolean checkConflicts(Fragment fragment) {
+    private boolean hasConflicts(Fragment fragment) {
         return fragmentService.hasConflictingCalls(
                 fragment.getCallerMsisdn(),
                 fragment.getReceiverMsisdn(),
                 fragment.getStartTime(),
-                fragment.getEndTime());
+                fragment.getEndTime()
+        );
     }
 
     private Fragment createMirrorFragment(Fragment original) {
@@ -150,5 +253,19 @@ public class RecordGenerator {
 
     private String getRandomMsisdn(List<String> msisdns) {
         return msisdns.get(random.nextInt(msisdns.size()));
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        logger.info("Shutting down fragment executor");
+        fragmentExecutor.shutdown();
+        try {
+            if (!fragmentExecutor.awaitTermination(60, TimeUnit.SECONDS)) {
+                fragmentExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            fragmentExecutor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 }

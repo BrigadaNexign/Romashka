@@ -1,5 +1,6 @@
 package rom.cdr;
 
+import org.springframework.boot.SpringApplication;
 import rom.cdr.service.record.RecordGenerator;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
@@ -21,8 +22,6 @@ public class Application {
      * @param args аргументы командной строки, переданные при запуске приложения
      */
     public static void main(String[] args) {
-        ApplicationContext context = new AnnotationConfigApplicationContext(Application.class);
-        RecordGenerator executor = context.getBean(RecordGenerator.class);
-        executor.generateCDRData(1);
+        SpringApplication.run(Application.class, args);
     }
 }

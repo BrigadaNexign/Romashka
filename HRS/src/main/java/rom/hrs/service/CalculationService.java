@@ -8,8 +8,6 @@ import java.time.LocalDate;
 
 @Service
 public class CalculationService {
-
-    // Тарифные ставки (в реальном проекте должны браться из БД/конфига)
     private static final double INCOMING_RATE = 0.5;  // руб/мин для входящих
     private static final double OUTGOING_RATE = 1.5;  // руб/мин для исходящих
     private static final double MONTHLY_FEE = 100.0; // абонплата
@@ -18,7 +16,6 @@ public class CalculationService {
      * Основной метод расчета стоимости звонка
      */
     public CalculationResponse calculate(CalculationRequest request) {
-        // Для примера: тариф 11 - помесячный, 12 - поминутный
         if (request.tariffId() == 11) {
             return handleMonthlyTariff(request);
         } else {
