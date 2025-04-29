@@ -1,6 +1,8 @@
 package rom.cdr.service.sender;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,9 +17,10 @@ public class ReportQueueSender {
     String exchangeName;
     @Value("${spring.rabbitmq.routing.key}")
     String routingKey;
+    private final Logger logger = LoggerFactory.getLogger(ReportQueueSender.class);
 
     public void sendReport(String message) {
         rabbitTemplate.convertAndSend(exchangeName, routingKey, message);
-        System.out.println("Sent cdr: " + message);
+        logger.info("Sent cdr:\n{}\n", message);
     }
 }
