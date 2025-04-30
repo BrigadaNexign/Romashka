@@ -17,7 +17,7 @@ public class ReportConsumer {
 
     @RabbitListener(queues = "cdr.queue")
     public void handleMessage(String message) {
-        messageHandler.handleMessage(message);
         logger.info("Received message: \n{}", message);
+        messageHandler.handleMessage(message);
     }
 }

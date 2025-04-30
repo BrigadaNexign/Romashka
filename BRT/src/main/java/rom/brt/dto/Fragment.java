@@ -2,6 +2,7 @@ package rom.brt.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -12,6 +13,7 @@ import java.time.format.DateTimeFormatter;
  */
 @Data
 @AllArgsConstructor
+@ToString
 public class Fragment {
     /**
      * Тип вызова:
@@ -28,7 +30,7 @@ public class Fragment {
 
     private LocalDateTime endTime;
 
-    public static Fragment fromString(String fragmentString) {
+    public static Fragment fromString(String fragmentString) throws IllegalArgumentException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
         String[] parts = fragmentString.split(", ");
         try {
@@ -40,8 +42,7 @@ public class Fragment {
                     LocalDateTime.parse(parts[4], formatter)
             );
         } catch (IndexOutOfBoundsException e) {
-            System.out.println(e.getMessage());
+            throw new IllegalArgumentException("Error parsing fragment");
         }
-        return null;
     }
 }

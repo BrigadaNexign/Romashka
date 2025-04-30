@@ -9,50 +9,68 @@ import rom.brt.dto.*;
 import rom.brt.entity.CallRecord;
 import rom.brt.entity.User;
 import rom.brt.repository.CallRecordRepository;
-import rom.brt.repository.UserRepository;
 
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
 public class MessageHandler {
     private final HRSClient hrsClient;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final CallRecordRepository callRecordRepository;
     private final BillingService billingService;
     private final Logger logger = LoggerFactory.getLogger(MessageHandler.class);
 
+    private static final Pattern CDR_PATTERN = Pattern.compile(
+            "^\\d{2},\\s*\\d{11},\\s*\\d{11},\\s*\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2},\\s*\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+    );
+
     public void handleMessage(String message) {
         Arrays.stream(message.split("\n"))
+                .map(String::trim)
+                .filter(line -> CDR_PATTERN.matcher(line).matches())
                 .forEach(this::handleFragment);
     }
 
     private void handleFragment(String fragmentStr) {
+        logger.info("Trying to handle message \"{}\"", fragmentStr);
         try {
             Fragment fragment = Fragment.fromString(fragmentStr);
-            if (fragment != null) {
-                processCall(fragment);
-            }
+            processCall(fragment);
+        } catch (IllegalArgumentException e) {
+            logger.error(
+                    "Fragment \"{}\" parsing resulted in exception \"{}\"",
+                    fragmentStr,
+                    e.getLocalizedMessage()
+            );
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage());
         }
     }
 
     private void processCall(Fragment fragment) {
-        User caller = userRepository.findByMsisdn(fragment.getCallerMsisdn());
-        User receiver = userRepository.findByMsisdn(fragment.getReceiverMsisdn());
+        User caller = userService.findUser(fragment.getCallerMsisdn());
+        User receiver = userService.findUser(fragment.getReceiverMsisdn());
 
-        if (caller == null || receiver == null) {
+        if (caller.getUserId() == null) {
+            logger.error(
+                    "Caller is not serviced by Romashka. Terminating fragment processing for fragment: \"{}\"", fragment
+            );
             return;
         }
+
+        if (receiver.getUserId() == null) logger.error("Receiver is not serviced by Romashka");
 
         CalculationRequest request = buildCalculationRequest(fragment, caller, receiver);
         CalculationResponse response = hrsClient.calculateCost(request);
 
         if (response != null) {
             handleCalculationResponse(caller, fragment, response);
+        } else {
+            logger.error("Got null response from HRS for fragment \"{}\"", fragment);
         }
     }
 
@@ -62,8 +80,8 @@ public class MessageHandler {
 
         return new CalculationRequest(
                 fragment.getCallType(),
-                new Subscriber(caller.getUserId(), caller.getMsisdn(), true),
-                new Subscriber(receiver.getUserId(), receiver.getMsisdn(), true),
+                new Subscriber(caller.getUserId(), caller.getMsisdn(), caller.getUserId()!=null),
+                new Subscriber(receiver.getUserId(), receiver.getMsisdn(), receiver.getUserId()!=null),
                 durationMinutes,
                 caller.getTariffId(),
                 fragment.getStartTime().toLocalDate(),

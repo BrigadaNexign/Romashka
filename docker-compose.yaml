@@ -15,6 +15,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+      start_period: 10s
     networks:
       - romashka-network
 
@@ -39,7 +40,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Liquibase (применяет миграции к PostgreSQL)
   liquibase:
     image: liquibase/liquibase
     container_name: liquibase
@@ -47,36 +47,41 @@ services:
       - ./resources/db/changelog/changelog_master.xml:/liquibase/changelog_master.xml
       - ./resources/db/changelog/v.0.0.2:/liquibase/v.0.0.2
       - ./resources/db/changelog/v.0.0.3:/liquibase/v.0.0.3
+      - ./resources/db/changelog/v.0.0.4:/liquibase/v.0.0.4
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - romashka-network
-    # Автоматически применяет миграции при старте
     command: --url="jdbc:postgresql://postgres_db:5432/${DB_NAME}" --username=${DB_USER} --password=${DB_PASSWORD} --changeLogFile=changelog_master.xml update
 
   cdr:
     build: CDR/
     container_name: cdr
     depends_on:
-      - postgres
-      - rabbitmq
-      - liquibase
-      - brt
-      - hrs
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - romashka-network
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   brt:
     build: BRT/
     container_name: brt
     depends_on:
-      - postgres
-      - rabbitmq
-      - liquibase
-      - hrs
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - romashka-network
     ports:
@@ -86,9 +91,10 @@ services:
     build: HRS/
     container_name: hrs
     depends_on:
-      - postgres
-      - rabbitmq
-      - liquibase
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - romashka-network
     ports:

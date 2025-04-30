@@ -1,7 +1,5 @@
 package rom.brt.dto;
 
-import rom.brt.dto.Subscriber;
-
 import java.time.LocalDate;
 
 public record CalculationRequest(
