@@ -23,4 +23,7 @@ public class Tariff {
 
     @Column(name = "tariff_desc")
     private String description;
+
+    @Column(name = "type_id")
+    private int type;
 }
