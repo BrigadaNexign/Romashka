@@ -1,19 +1,20 @@
 package rom.hrs.dto;
 
-public record Subscriber(
-        Integer id,
-        String msisdn,
-        boolean isServiced
-) {
-    public Subscriber {
-        if (id != null && id <= 0) {
-            throw new IllegalArgumentException("Invalid id. Id must be positive or none");
-        }
-        if (msisdn.length() != 11) {
-            throw new IllegalArgumentException("Invalid msisdn. Msisdn length must be equal 11");
-        }
-        if (id == null && isServiced) {
-            throw new IllegalStateException("Subscriber without id cannot be serviced");
-        }
-    }
+import lombok.*;
+
+import java.time.LocalDate;
+
+@Data
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Subscriber {
+    private Integer id;
+    private String msisdn;
+    private boolean isServiced;
+    private Integer tariffId;
+    private Integer minutes;
+    private LocalDate paymentDay;
 }

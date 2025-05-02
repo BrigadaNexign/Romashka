@@ -1,9 +1,14 @@
 package rom.brt.dto;
 
+import java.time.LocalDate;
+
 public record Subscriber(
         Integer id,
         String msisdn,
-        boolean isServiced
+        boolean isServiced,
+        Integer tariffId,
+        Integer minutes,
+        LocalDate paymentDay
 ) {
     public Subscriber {
         if (id != null && id <= 0) {

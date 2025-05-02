@@ -7,9 +7,7 @@ public record CalculationRequest(
         Subscriber caller,
         Subscriber receiver,
         int durationMinutes,
-        int tariffId,
-        LocalDate currentDate,
-        LocalDate paymentDay
+        LocalDate currentDate
 ) {
     public CalculationRequest {
         if (!callType.matches("01|02")) {

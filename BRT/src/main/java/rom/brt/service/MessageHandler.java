@@ -15,6 +15,10 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
+/**
+ * 2025-05-01T16:39:07.615Z ERROR 1 --- [nio-8082-exec-8] rom.hrs.service.CalculationService : Error handling request: "CalculationRequest(callType=02, caller=Subscriber(id=2, msisdn=79992224466, isServiced=false, tariffId=12, minutes=50, paymentDay=2024-05-13), receiver=Subscriber(id=4, msisdn=79994446688, isServiced=false, tariffId=12, minutes=50, paymentDay=2024-05-13), durationMinutes=59, currentDate=2025-04-30)": "Cannot invoke "java.lang.Double.doubleValue()" because the return value of "rom.hrs.dto.CalculationResponse.getCost()" is null"
+ * 2025-05-01T16:39:07.688Z ERROR 1 --- [ntContainer#0-1] rom.brt.service.MessageHandler : Cannot invoke "rom.brt.entity.UserParams.getMinutes()" because the return value of "rom.brt.entity.User.getUserParams()" is null
+ */
 @Service
 @RequiredArgsConstructor
 public class MessageHandler {
@@ -56,9 +60,7 @@ public class MessageHandler {
         User receiver = userService.findUser(fragment.getReceiverMsisdn());
 
         if (caller.getUserId() == null) {
-            logger.error(
-                    "Caller is not serviced by Romashka. Terminating fragment processing for fragment: \"{}\"", fragment
-            );
+            logger.info("Caller is not serviced by Romashka. Terminating fragment processing");
             return;
         }
 
@@ -70,7 +72,7 @@ public class MessageHandler {
         if (response != null) {
             handleCalculationResponse(caller, fragment, response);
         } else {
-            logger.error("Got null response from HRS for fragment \"{}\"", fragment);
+            logger.error("Got null response from HRS");
         }
     }
 
@@ -80,12 +82,24 @@ public class MessageHandler {
 
         return new CalculationRequest(
                 fragment.getCallType(),
-                new Subscriber(caller.getUserId(), caller.getMsisdn(), caller.getUserId()!=null),
-                new Subscriber(receiver.getUserId(), receiver.getMsisdn(), receiver.getUserId()!=null),
+                new Subscriber(
+                        caller.getUserId(),
+                        caller.getMsisdn(),
+                        caller.getUserId()!=null, //TODO: Always null
+                        caller.getTariffId(),
+                        caller.getUserParams().getMinutes(),
+                        caller.getUserParams().getPaymentDay()
+                ),
+                new Subscriber(
+                        receiver.getUserId(),
+                        receiver.getMsisdn(),
+                        receiver.getUserId()!=null,
+                        receiver.getTariffId(),
+                        receiver.getUserParams().getMinutes(),
+                        receiver.getUserParams().getPaymentDay()
+                ),
                 durationMinutes,
-                caller.getTariffId(),
-                fragment.getStartTime().toLocalDate(),
-                caller.getUserParams().getPaymentDay()
+                fragment.getStartTime().toLocalDate()
         );
     }
 
