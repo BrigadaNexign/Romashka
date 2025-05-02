@@ -56,48 +56,51 @@ public class MessageHandler {
     }
 
     private void processCall(Fragment fragment) {
-        User caller = userService.findUser(fragment.getCallerMsisdn());
-        User receiver = userService.findUser(fragment.getReceiverMsisdn());
+        User callerRecord = userService.findUser(fragment.getCallerMsisdn());
+        logger.info("Got callerRecord: {}", callerRecord);
+        User receiverRecord = userService.findUser(fragment.getReceiverMsisdn());
+        logger.info("Got receiverRecord: {}", receiverRecord);
 
-        if (caller.getUserId() == null) {
+        Subscriber  caller;
+        Subscriber receiver;
+
+        if (callerRecord.getUserId() == -1) {
             logger.info("Caller is not serviced by Romashka. Terminating fragment processing");
             return;
         }
 
-        if (receiver.getUserId() == null) logger.error("Receiver is not serviced by Romashka");
+        caller = userService.createServicedSubscriberFromRecord(callerRecord);
+        logger.info("Created caller: {}", caller);
+
+        if (receiverRecord.getUserId() == -1) {
+            logger.info("Receiver {} is not serviced by Romashka", receiverRecord.getMsisdn());
+            receiver = userService.createForeignSubscriberFromRecord(receiverRecord);
+        } else {
+            receiver = userService.createServicedSubscriberFromRecord(receiverRecord);
+        }
+
+        logger.info("Created receiver: {}", receiver);
 
         CalculationRequest request = buildCalculationRequest(fragment, caller, receiver);
+        logger.info("Sent request: {}", request);
         CalculationResponse response = hrsClient.calculateCost(request);
+        logger.info("Received response: {}", response);
 
         if (response != null) {
-            handleCalculationResponse(caller, fragment, response);
+            handleCalculationResponse(callerRecord, fragment, response);
         } else {
             logger.error("Got null response from HRS");
         }
     }
 
-    private CalculationRequest buildCalculationRequest(Fragment fragment, User caller, User receiver) {
+    private CalculationRequest buildCalculationRequest(Fragment fragment, Subscriber caller, Subscriber receiver) {
         long seconds = Duration.between(fragment.getStartTime(), fragment.getEndTime()).getSeconds();
         int durationMinutes = (int) Math.ceil(seconds / 60.0);
 
         return new CalculationRequest(
                 fragment.getCallType(),
-                new Subscriber(
-                        caller.getUserId(),
-                        caller.getMsisdn(),
-                        caller.getUserId()!=null, //TODO: Always null
-                        caller.getTariffId(),
-                        caller.getUserParams().getMinutes(),
-                        caller.getUserParams().getPaymentDay()
-                ),
-                new Subscriber(
-                        receiver.getUserId(),
-                        receiver.getMsisdn(),
-                        receiver.getUserId()!=null,
-                        receiver.getTariffId(),
-                        receiver.getUserParams().getMinutes(),
-                        receiver.getUserParams().getPaymentDay()
-                ),
+                caller,
+                receiver,
                 durationMinutes,
                 fragment.getStartTime().toLocalDate()
         );

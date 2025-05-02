@@ -2,8 +2,6 @@ package rom.hrs.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
-
 import java.math.BigDecimal;
 
 @Entity
@@ -25,4 +23,3 @@ public class CallPricing {
     @JoinColumn(name = "tariff_id", nullable = false)
     private Tariff tariff;
 }
-

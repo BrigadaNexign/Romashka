@@ -21,4 +21,12 @@ public record Subscriber(
             throw new IllegalStateException("Subscriber without id cannot be serviced");
         }
     }
+
+    public static Subscriber fromServicedUser(int id, String msisdn, int tariffId, int minutes, LocalDate paymentDay) {
+        return new Subscriber(id, msisdn, true, tariffId, minutes, paymentDay);
+    }
+
+    public static Subscriber fromForeignUser(String msisdn) {
+        return new Subscriber(null, msisdn, false, null, null, null);
+    }
 }

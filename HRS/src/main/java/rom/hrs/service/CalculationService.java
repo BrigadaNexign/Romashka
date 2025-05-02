@@ -32,7 +32,7 @@ public class CalculationService {
      */
     public CalculationResponse calculate(CalculationRequest request) {
         try {
-            Tariff tariff = tariffService.findTariffById(request.getCaller().getTariffId());
+            Tariff tariff = tariffService.findTariffById(request.getCaller().tariffId());
             logger.info("Trying to handle request: \"{}\"", request);
             return handleCalculationRequest(request, tariff);
         } catch (Exception e) {
@@ -56,7 +56,7 @@ public class CalculationService {
                 logger.error(
                         "Error handling request: \"{}\": Tariff with id={} exists, but not supported by current version",
                         request,
-                        request.getCaller().getTariffId()
+                        request.getCaller().tariffId()
                 );
                 yield handleError();
             }
@@ -68,7 +68,8 @@ public class CalculationService {
         if (checkIntervalPayment(request)) {
            feeIntervalPayment(request, tariff, response);
         }
-        
+
+        fillEmptyResponseFields(request, tariff, response);
         return response;
     }
 
@@ -81,6 +82,7 @@ public class CalculationService {
             feeNoMinutes(request, tariff, response);
         }
 
+        fillEmptyResponseFields(request, tariff, response);
         return response;
     }
 
@@ -96,16 +98,25 @@ public class CalculationService {
             feeNoMinutes(request, tariff, response);
         }
 
+        fillEmptyResponseFields(request, tariff, response);
         return response;
+    }
+
+    private void fillEmptyResponseFields(CalculationRequest request, Tariff tariff, CalculationResponse response) {
+        logger.info("Filling empty fields for response: {}", response);
+        if (response.getTariffType() == null) response.setTariffType(String.valueOf(tariff.getType()));
+        if (response.getRemainingMinutes() == null) response.setRemainingMinutes(request.getCaller().minutes());
+        if (response.getNextPaymentDate() == null) response.setNextPaymentDate(request.getCaller().paymentDay());
+        logger.info("Finished filling empty fields for response: {}", response);
     }
 
     private void feeIntervalPayment(CalculationRequest request, Tariff tariff, CalculationResponse response) {
         List<TariffIntervalDto> tariffIntervalDtoList = getIntervalsByTariffId(tariff.getId());
-        if (tariffIntervalDtoList.size() == 1) {
-            feeCostForInterval(request, tariffIntervalDtoList.get(0), response);
-        } else {
-            logger.error("Tariff with id={} has multiple or none intervals", tariff.getId());
-        }
+        if (tariffIntervalDtoList.size() != 1) logger.error(
+                "Tariff with id={} has multiple or none intervals. Using one that was found first",
+                tariff.getId()
+        );
+        feeCostForInterval(request, tariffIntervalDtoList.get(0), response);
     }
 
     private void feeHasMinutes(CalculationRequest request, Tariff tariff, CalculationResponse response) {
@@ -119,10 +130,17 @@ public class CalculationService {
 
     private void feeNoMinutes(CalculationRequest request, Tariff tariff, CalculationResponse response) {
         List<CallPricing> callPricingList = callPricingService.getCallPricingListByTariffId(tariff.getId());
-        if (callPricingList.size() == 1) {
-            feeCostForMinutes(request.getDurationMinutes(), callPricingList.get(0), response);
+        int callPricingType = getCallPricingType(request);
+        CallPricing callPricing = callPricingList.stream()
+                .filter(it -> it.getId().getCallType().equals(callPricingType))
+                .findAny()
+                .orElse(null);
+
+        if (callPricing != null) {
+            feeCostForMinutes(request.getDurationMinutes(), callPricing, response);
         } else {
-            logger.error("Tariff with id={} has multiple or none pricings", tariff.getId());
+            logger.error("No pricings found for tariff with id={}", tariff.getId());
+            throw new IllegalArgumentException("No pricings found for tariff with id=" + tariff.getId());
         }
     }
 
@@ -137,7 +155,7 @@ public class CalculationService {
     }
 
     private boolean hasFreeMinutes(CalculationRequest request) {
-        return request.getCaller().getMinutes() > 0;
+        return request.getCaller().minutes() > 0;
     }
 
     public List<TariffIntervalDto> getIntervalsByTariffId(Integer tariffId) {
@@ -147,7 +165,7 @@ public class CalculationService {
     }
 
     private int feeMinutesForMinutes(CalculationRequest request) {
-        return request.getCaller().getMinutes() - request.getDurationMinutes();
+        return request.getCaller().minutes() - request.getDurationMinutes();
     }
 
     private void feeCostForInterval(
@@ -156,7 +174,7 @@ public class CalculationService {
             CalculationResponse response
     ) {
          response.setNextPaymentDate(
-                 request.getCaller().getPaymentDay().plusDays(tariffIntervalData.getInterval())
+                 request.getCaller().paymentDay().plusDays(tariffIntervalData.getInterval())
          );
          response.setCost(
                  response.getCost() + tariffIntervalData.getPrice().doubleValue()
@@ -164,7 +182,29 @@ public class CalculationService {
     }
 
     private boolean checkIntervalPayment(CalculationRequest request) {
-        return request.getCaller().getPaymentDay().isAfter(request.getCurrentDate());
+        return request.getCaller().paymentDay().isBefore(request.getCurrentDate());
+    }
+
+    private int getCallPricingType(CalculationRequest request) {
+        /*
+         * Тип вызова:
+         * - "01" — исходящий вызов,
+         * - "02" — входящий вызов.
+         */
+        String callType = request.getCallType();
+        boolean isCallerServiced = request.getCaller().isServiced();
+        boolean isReceiverServiced = request.getReceiver().isServiced();
+        if (callType.equals("01") && isCallerServiced && isReceiverServiced) {
+            return 1;
+        } else if (callType.equals("01") && isCallerServiced) {
+            return 2;
+        } else if (callType.equals("02") && isCallerServiced && isReceiverServiced) {
+            return 3;
+        } else if (callType.equals("02") && isCallerServiced) {
+            return 4;
+        } else if (!(callType.equals("01") || callType.equals("02"))) {
+            throw new IllegalArgumentException("Illegal call type in request");
+        } else throw new IllegalArgumentException("Caller is not serviced by Romashka");
     }
 
     private CalculationResponse handleError() {

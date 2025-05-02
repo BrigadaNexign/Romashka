@@ -8,12 +8,15 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor
+@NoArgsConstructor()
 @AllArgsConstructor
 public class CalculationResponse {
-    private Double cost;
-    private String tariffType;
-    private String description;
-    private Integer remainingMinutes;
+    @Builder.Default
+    private Double cost = 0.0;
+    @Builder.Default
+    private String tariffType = "00";
+    @Builder.Default
+    private String description = "Default description";
+    private Integer remainingMinutes ;
     private LocalDate nextPaymentDate;
 }
