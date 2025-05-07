@@ -3,13 +3,11 @@ package rom.cdr.service.record;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import rom.cdr.entity.Fragment;
-import rom.cdr.service.fragment.FragmentEditor;
-import rom.cdr.service.fragment.FragmentService;
-import rom.cdr.service.sender.ReportQueueSender;
-import rom.cdr.service.subscriber.SubscriberService;
+import rom.cdr.service.fragment.FragmentGenerator;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -21,25 +19,103 @@ import java.util.stream.Collectors;
 public class RecordGenerator {
     private static final Logger logger = LoggerFactory.getLogger(RecordGenerator.class);
     private static final int FRAGMENT_GENERATION_THREADS = 10;
-    private static final int CDR_BATCH_SIZE = 10;
+    private static final ThreadLocalRandom random = ThreadLocalRandom.current();
 
-    private final SubscriberService subscriberService;
-    private final FragmentService fragmentService;
-    private final FragmentEditor fragmentEditor;
-    private final ThreadLocalRandom random;
-    private final ExecutorService fragmentExecutor;
-    private final ReportQueueSender reportQueueSender;
+    @Autowired
+    private FragmentGenerator fragmentGenerator;
+    @Autowired
+    private RecordProcessor recordProcessor;
 
-    public RecordGenerator(SubscriberService subscriberService,
-                           FragmentService fragmentService,
-                           FragmentEditor fragmentEditor,
-                           ReportQueueSender reportQueueSender) {
-        this.subscriberService = subscriberService;
-        this.fragmentService = fragmentService;
-        this.fragmentEditor = fragmentEditor;
-        this.reportQueueSender = reportQueueSender;
-        this.random = ThreadLocalRandom.current();
-        this.fragmentExecutor = Executors.newFixedThreadPool(FRAGMENT_GENERATION_THREADS,
+    final ExecutorService fragmentExecutor = createThreadPool();
+
+    @Async
+    public void generateForPeriod(LocalDateTime startTime, LocalDateTime endTime) {
+        logger.info("Starting generation for period: {} - {}", startTime, endTime);
+        long startMs = System.currentTimeMillis();
+
+        try {
+            List<CompletableFuture<List<Fragment>>> futures = scheduleGenerationTasks(startTime, endTime);
+            processGeneratedFragments(futures, startMs);
+        } catch (Exception e) {
+            handleGenerationError(e);
+        }
+    }
+
+    public List<CompletableFuture<List<Fragment>>> scheduleGenerationTasks(
+            LocalDateTime startTime,
+            LocalDateTime endTime
+    ) {
+
+        List<CompletableFuture<List<Fragment>>> futures = new ArrayList<>();
+        LocalDateTime currentStart = startTime;
+
+        while (currentStart.isBefore(endTime)) {
+            LocalDateTime callEndTime = calculateCallEndTime(currentStart, endTime);
+            futures.add(createFragmentGenerationTask(currentStart, callEndTime));
+            currentStart = calculateNextStartTime(callEndTime);
+        }
+
+        logger.info("Scheduled {} fragment generation tasks", futures.size());
+        return futures;
+    }
+
+    public LocalDateTime calculateCallEndTime(LocalDateTime currentStart, LocalDateTime endTime) {
+        LocalDateTime callEndTime = currentStart.plusMinutes(1 + random.nextInt(59));
+        return callEndTime.isAfter(endTime) ? endTime : callEndTime;
+    }
+
+    CompletableFuture<List<Fragment>> createFragmentGenerationTask(
+            LocalDateTime startTime,
+            LocalDateTime endTime
+    ) {
+
+        return CompletableFuture.supplyAsync(
+                () -> fragmentGenerator.generateFragmentWithMidnightCheck(startTime, endTime),
+                fragmentExecutor
+        ).exceptionally(e -> {
+            logger.error("Failed to generate fragment for interval {} - {}: {}",
+                    startTime, endTime, e.getMessage());
+            return Collections.emptyList();
+        });
+    }
+
+    private LocalDateTime calculateNextStartTime(LocalDateTime callEndTime) {
+        return callEndTime.plusMinutes(random.nextInt(60));
+    }
+
+    void processGeneratedFragments(
+            List<CompletableFuture<List<Fragment>>> futures,
+            long startMs
+    ) {
+        CompletableFuture<List<Fragment>> combinedFragments = combineFutures(futures);
+
+        combinedFragments.thenAccept(fragments -> {
+            logger.info("Processing {} generated fragments", fragments.size());
+            recordProcessor.processAndSendFragments(fragments);
+            logger.info("Successfully processed fragments. Total duration: {}ms",
+                    System.currentTimeMillis() - startMs);
+        }).exceptionally(e -> {
+            logger.error("Failed to process fragments: {}", e.getMessage(), e);
+            return null;
+        });
+    }
+
+    CompletableFuture<List<Fragment>> combineFutures(
+            List<CompletableFuture<List<Fragment>>> futures) {
+
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                .thenApply(v -> futures.stream()
+                        .map(CompletableFuture::join)
+                        .flatMap(List::stream)
+                        .collect(Collectors.toList()));
+    }
+
+    private void handleGenerationError(Exception e) {
+        logger.error("Critical error in generateForPeriod: {}", e.getMessage(), e);
+    }
+
+    private ExecutorService createThreadPool() {
+        return Executors.newFixedThreadPool(FRAGMENT_GENERATION_THREADS,
                 new ThreadFactory() {
                     private final AtomicInteger counter = new AtomicInteger(1);
                     @Override
@@ -47,212 +123,6 @@ public class RecordGenerator {
                         return new Thread(r, "fragment-gen-" + counter.getAndIncrement());
                     }
                 });
-    }
-
-    @Async
-    public CompletableFuture<Void> generateForPeriod(LocalDateTime startTime, LocalDateTime endTime) {
-        logger.info("Starting generation for period: {} - {}", startTime, endTime);
-        long startMs = System.currentTimeMillis();
-
-        try {
-            logger.debug("Retrieving all MSISDNs");
-            List<String> msisdns = subscriberService.getAllMsisdns();
-            logger.info("Retrieved {} MSISDNs for generation", msisdns.size());
-
-            List<CompletableFuture<List<Fragment>>> fragmentFutures = new ArrayList<>();
-            LocalDateTime currentStart = startTime;
-
-            while (currentStart.isBefore(endTime)) {
-                LocalDateTime callEndTime = currentStart.plusMinutes(1 + random.nextInt(59));
-                callEndTime = callEndTime.isAfter(endTime) ? endTime : callEndTime;
-
-                logger.debug("Generating fragment for interval: {} - {}", currentStart, callEndTime);
-
-                LocalDateTime finalStart = currentStart;
-                LocalDateTime finalEnd = callEndTime;
-
-                CompletableFuture<List<Fragment>> future = CompletableFuture.supplyAsync(
-                        () -> generateFragmentWithMidnightCheck(finalStart, finalEnd, msisdns),
-                        fragmentExecutor
-                ).exceptionally(e -> {
-                    logger.error("Failed to generate fragment for interval {} - {}: {}",
-                            finalStart, finalEnd, e.getMessage());
-                    return Collections.emptyList();
-                });
-
-                fragmentFutures.add(future);
-                currentStart = callEndTime.plusMinutes(random.nextInt(60));
-            }
-
-            logger.info("Scheduled {} fragment generation tasks", fragmentFutures.size());
-
-            CompletableFuture<Void> allFutures = CompletableFuture.allOf(
-                    fragmentFutures.toArray(new CompletableFuture[0])
-            );
-
-            CompletableFuture<List<Fragment>> combinedFragments = allFutures.thenApply(v -> {
-                List<Fragment> result = fragmentFutures.stream()
-                        .map(CompletableFuture::join)
-                        .flatMap(List::stream)
-                        .collect(Collectors.toList());
-                logger.debug("Combined {} fragments from all tasks", result.size());
-                return result;
-            });
-
-            combinedFragments.thenAccept(fragments -> {
-                try {
-                    logger.info("Processing {} generated fragments", fragments.size());
-                    processAndSendFragments(fragments);
-                    logger.info("Successfully processed fragments. Total duration: {}ms",
-                            System.currentTimeMillis() - startMs);
-                } catch (Exception e) {
-                    logger.error("Failed to process fragments: {}", e.getMessage(), e);
-                }
-            });
-
-            return combinedFragments.thenApply(f -> null);
-        } catch (Exception e) {
-            logger.error("Critical error in generateForPeriod: {}", e.getMessage(), e);
-            throw e;
-        }
-    }
-
-    private List<Fragment> generateFragmentWithMidnightCheck(
-            LocalDateTime startTime,
-            LocalDateTime endTime,
-            List<String> msisdns) {
-        try {
-            logger.debug("Generating fragment between {} and {}", startTime, endTime);
-            List<Fragment> result = new ArrayList<>();
-
-            if (!startTime.toLocalDate().equals(endTime.toLocalDate())) {
-                logger.debug("Fragment crosses midnight");
-                Fragment firstPart = createRandomFragment(
-                        startTime,
-                        startTime.toLocalDate().atTime(23, 59, 59),
-                        msisdns
-                );
-
-                Fragment secondPart = fragmentEditor.createFragment(
-                        firstPart.getCallType(),
-                        firstPart.getCallerMsisdn(),
-                        firstPart.getReceiverMsisdn(),
-                        endTime.toLocalDate().atStartOfDay(),
-                        endTime
-                );
-
-                if (checkConflicts(firstPart) && checkConflicts(secondPart)) {
-                    logger.debug("Saving fragments crossing midnight");
-                    result.add(saveFragment(firstPart));
-                    result.add(saveFragment(createMirrorFragment(firstPart)));
-                    result.add(saveFragment(secondPart));
-                    result.add(saveFragment(createMirrorFragment(secondPart)));
-                }
-            } else {
-                Fragment fragment = createRandomFragment(startTime, endTime, msisdns);
-                if (checkConflicts(fragment)) {
-                    logger.debug("Saving single day fragment");
-                    result.add(saveFragment(fragment));
-                    result.add(saveFragment(createMirrorFragment(fragment)));
-                }
-            }
-
-            logger.debug("Generated {} fragments for interval {} - {}",
-                    result.size(), startTime, endTime);
-            return result;
-        } catch (Exception e) {
-            logger.error("Error in generateFragmentWithMidnightCheck: {}", e.getMessage(), e);
-            throw e;
-        }
-    }
-
-    private boolean checkConflicts(Fragment fragment) {
-        synchronized(getLockObject(fragment.getCallerMsisdn(), fragment.getReceiverMsisdn())) {
-            boolean hasConflict = hasConflicts(fragment);
-            if (hasConflict) {
-                logger.warn("Conflict detected for call between {} and {} ({} - {})",
-                        fragment.getCallerMsisdn(),
-                        fragment.getReceiverMsisdn(),
-                        fragment.getStartTime(),
-                        fragment.getEndTime());
-            }
-            return !hasConflict;
-        }
-    }
-
-    private Object getLockObject(String msisdn1, String msisdn2) {
-        String[] keys = {msisdn1, msisdn2};
-        Arrays.sort(keys);
-        return (keys[0] + "|" + keys[1]).intern();
-    }
-
-    private Fragment saveFragment(Fragment fragment) {
-        try {
-            logger.debug("Saving fragment: {}", fragment);
-            Fragment saved = fragmentService.saveCDR(fragment);
-            logger.trace("Fragment saved successfully: {}", saved.getId());
-            return saved;
-        } catch (Exception e) {
-            logger.error("Failed to save fragment: {}", e.getMessage(), e);
-            throw e;
-        }
-    }
-
-    private Fragment createRandomFragment(
-            LocalDateTime startTime,
-            LocalDateTime endTime,
-            List<String> msisdns
-    ) {
-        return fragmentEditor.createFragment(
-                random.nextBoolean() ? "01" : "02",
-                getRandomMsisdn(msisdns),
-                getRandomMsisdn(msisdns),
-                startTime,
-                endTime
-        );
-    }
-
-    private void processAndSendFragments(List<Fragment> fragments) {
-        fragments.sort(Comparator.comparing(Fragment::getStartTime));
-        sendBatches(fragments);
-    }
-
-    private void sendBatches(List<Fragment> dailyFragments) {
-        for (int i = 0; i < dailyFragments.size(); i += CDR_BATCH_SIZE) {
-            int endIndex = Math.min(i + CDR_BATCH_SIZE, dailyFragments.size());
-            List<Fragment> batch = dailyFragments.subList(i, endIndex);
-
-            if (batch.size() >= 10) {
-                String cdrContent = batch.stream()
-                        .map(fragmentEditor::formatFragment)
-                        .collect(Collectors.joining("\n"));
-
-                reportQueueSender.sendReport(cdrContent);
-            }
-        }
-    }
-
-    private boolean hasConflicts(Fragment fragment) {
-        return fragmentService.hasConflictingCalls(
-                fragment.getCallerMsisdn(),
-                fragment.getReceiverMsisdn(),
-                fragment.getStartTime(),
-                fragment.getEndTime()
-        );
-    }
-
-    private Fragment createMirrorFragment(Fragment original) {
-        return fragmentEditor.createFragment(
-                original.getCallType().equals("01") ? "02" : "01",
-                original.getReceiverMsisdn(),
-                original.getCallerMsisdn(),
-                original.getStartTime(),
-                original.getEndTime()
-        );
-    }
-
-    private String getRandomMsisdn(List<String> msisdns) {
-        return msisdns.get(random.nextInt(msisdns.size()));
     }
 
     @PreDestroy

@@ -1,12 +1,12 @@
 package rom.hrs.service;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import rom.hrs.entity.Tariff;
+import rom.hrs.exception.NoTariffFoundException;
 import rom.hrs.repository.TariffRepository;
 import rom.hrs.repository.TariffTypeRepository;
 
@@ -20,8 +20,8 @@ public class TariffService {
     @Autowired
     private TariffTypeRepository tariffTypeRepository;
 
-    public Tariff findTariffById(int tariffId) {
+    public Tariff findTariffById(long tariffId) throws NoTariffFoundException {
         return tariffRepository.findById(tariffId)
-                .orElseThrow(() -> new EntityNotFoundException("Tariff not found with id: " + tariffId));
+                .orElseThrow(() -> new NoTariffFoundException(tariffId));
     }
 }
