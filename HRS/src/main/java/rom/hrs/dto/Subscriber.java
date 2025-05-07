@@ -6,7 +6,7 @@ public record Subscriber(
         Integer id,
         String msisdn,
         boolean isServiced,
-        Integer tariffId,
+        Long tariffId,
         Integer minutes,
         LocalDate paymentDay
 ) {
@@ -22,7 +22,7 @@ public record Subscriber(
         }
     }
 
-    public static Subscriber fromServicedUser(int id, String msisdn, int tariffId, int minutes, LocalDate paymentDay) {
+    public static Subscriber fromServicedUser(int id, String msisdn, long tariffId, int minutes, LocalDate paymentDay) {
         return new Subscriber(id, msisdn, true, tariffId, minutes, paymentDay);
     }
 

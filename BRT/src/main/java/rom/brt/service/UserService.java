@@ -10,7 +10,7 @@ import rom.brt.repository.UserRepository;
 
 @Service
 public class UserService {
-    Logger logger = LoggerFactory.getLogger(UserService.class);
+    final Logger logger = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
 
     @Autowired

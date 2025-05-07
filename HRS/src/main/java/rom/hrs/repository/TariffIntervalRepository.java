@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface TariffIntervalRepository extends JpaRepository<TariffInterval, TariffIntervalId> {
-    List<TariffInterval> findByTariffId(Integer tariffId);
+    List<TariffInterval> findByTariffId(Long tariffId);
 }

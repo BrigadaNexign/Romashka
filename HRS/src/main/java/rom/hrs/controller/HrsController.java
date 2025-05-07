@@ -3,6 +3,7 @@ package rom.hrs.controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,9 +18,11 @@ public class HrsController {
     private CalculationService calculationService;
 
     @PostMapping("/hrs/calculate")
-    public CalculationResponse calculateCost(@RequestBody CalculationRequest request) {
+    public ResponseEntity<CalculationResponse> calculateCost(@RequestBody CalculationRequest request) {
         logger.info("Received request: {}", request);
-        return calculationService.calculate(request);
+        ResponseEntity<CalculationResponse> response = calculationService.calculate(request);
+        logger.info("Returned response: {}", response);
+        return response;
     }
 
 }

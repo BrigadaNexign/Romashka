@@ -15,7 +15,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class CallPricingId implements Serializable {
     @Column(name = "tariff_id")
-    private Integer tariffId;
+    private Long tariffId;
 
     @Column(name = "call_type")
     private Integer callType;

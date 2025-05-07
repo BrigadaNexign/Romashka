@@ -1,9 +1,7 @@
 package rom.hrs.entity;
 
 import jakarta.persistence.*;
-import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Entity

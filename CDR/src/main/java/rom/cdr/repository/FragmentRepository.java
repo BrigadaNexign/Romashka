@@ -18,48 +18,10 @@ import java.util.List;
 @Repository
 public interface FragmentRepository extends JpaRepository<Fragment, Long> {
 
-    /**
-     * Удаляет запись Fragment по её идентификатору.
-     *
-     * @param CDRId идентификатор записи Fragment
-     */
     void deleteById(Long CDRId);
 
-    /**
-     * Находит все записи Fragment, связанные с указанным номером абонента (как вызывающего, так и принимающего).
-     *
-     * @param callerMsisdn номер вызывающего абонента
-     * @param receiverMsisdn номер принимающего абонента
-     * @return список записей Fragment
-     */
-    List<Fragment> findByCallerMsisdnOrReceiverMsisdn(String callerMsisdn, String receiverMsisdn);
-
-    /**
-     * Сохраняет все переданные записи Fragment.
-     *
-     * @param entities список записей Fragment для сохранения
-     * @param <S> тип записи Fragment
-     * @return список сохраненных записей Fragment
-     */
     @Override
     <S extends Fragment> List<S> saveAll(Iterable<S> entities);
-
-    /**
-     * Находит все записи Fragment, связанные с указанным номером абонента (как вызывающего, так и принимающего),
-     * и ограниченные временным интервалом.
-     *
-     * @param msisdn номер абонента
-     * @param startTime начало временного интервала
-     * @param endTime конец временного интервала
-     * @return список записей Fragment, соответствующих критериям
-     */
-    @Query("SELECT c FROM Fragment c WHERE (c.callerMsisdn = :msisdn OR c.receiverMsisdn = :msisdn) " +
-            "AND c.startTime BETWEEN :startTime AND :endTime")
-    List<Fragment> findByCallerMsisdnOrReceiverMsisdnAndStartTimeBetween(
-            @Param("msisdn") String msisdn,
-            @Param("startTime") LocalDateTime startTime,
-            @Param("endTime") LocalDateTime endTime
-    );
 
     @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END " +
             "FROM Fragment c WHERE " +

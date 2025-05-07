@@ -1,6 +1,14 @@
 package rom.hrs.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import rom.hrs.dto.CalculationRequest;
+import rom.hrs.dto.CalculationResponse;
 import rom.hrs.entity.CallPricing;
+import rom.hrs.entity.CallType;
+import rom.hrs.entity.PricingType;
+import rom.hrs.entity.Tariff;
+import rom.hrs.exception.*;
 import rom.hrs.repository.CallPricingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -10,9 +18,54 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CallPricingService {
+    private static final Logger logger = LoggerFactory.getLogger(CallPricingService.class);
     private final CallPricingRepository callPricingRepository;
 
-    public List<CallPricing> getCallPricingListByTariffId(Integer tariffId) {
-        return callPricingRepository.findByTariffId(tariffId);
+    public void applyCallPricing(CalculationRequest request, Tariff tariff, CalculationResponse response)
+            throws BusinessException {
+
+        List<CallPricing> pricingList = callPricingRepository.findByTariffId(tariff.getId());
+        if (pricingList.isEmpty()) {
+            throw new NoPricingsFoundException(tariff.getId());
+        }
+
+        PricingType pricingType = resolvePricingType(request);
+
+        CallPricing pricing = pricingList.stream()
+                .filter(it -> it.getId().getCallType() == pricingType.getCode())
+                .findAny()
+                .orElseThrow(() -> {
+                    logger.error("No pricing found for tariff {} and pricing type {}",
+                            tariff.getId(), pricingType);
+                    return new PricingNotFoundException(tariff.getId(), pricingType);
+                });
+
+        response.setCost(response.getCost() + pricing.getCostPerMin().doubleValue() * request.getDurationMinutes());
+    }
+
+    public PricingType resolvePricingType(CalculationRequest request) throws InvalidCallTypeException, UnsupportedCallServiceCombinationException {
+        CallType callType = request.getCallTypeAsEnum();
+        boolean isCallerServiced = request.getCaller().isServiced();
+        boolean isReceiverServiced = request.getReceiver().isServiced();
+
+        if (callType == CallType.OUTGOING) {
+            if (isCallerServiced && isReceiverServiced) {
+                return PricingType.OUTGOING_BOTH_SERVICED;
+            } else if (isCallerServiced) {
+                return PricingType.OUTGOING_CALLER_SERVICED;
+            }
+        } else if (callType == CallType.INCOMING) {
+            if (isCallerServiced && isReceiverServiced) {
+                return PricingType.INCOMING_BOTH_SERVICED;
+            } else if (isCallerServiced) {
+                return PricingType.INCOMING_CALLER_SERVICED;
+            }
+        }
+
+        throw new UnsupportedCallServiceCombinationException(
+                callType,
+                isCallerServiced,
+                isReceiverServiced
+        );
     }
 }

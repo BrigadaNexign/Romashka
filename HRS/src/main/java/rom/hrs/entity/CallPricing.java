@@ -2,6 +2,8 @@ package rom.hrs.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import rom.hrs.exception.InvalidPricingTypeException;
+
 import java.math.BigDecimal;
 
 @Entity
@@ -22,4 +24,9 @@ public class CallPricing {
     @ManyToOne
     @JoinColumn(name = "tariff_id", nullable = false)
     private Tariff tariff;
+
+    @Transient
+    public PricingType getPricingType() throws InvalidPricingTypeException {
+        return PricingType.fromCode(id.getCallType());
+    }
 }
