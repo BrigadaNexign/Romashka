@@ -1,48 +1,45 @@
 package rom.brt.dto;
 
-import lombok.AllArgsConstructor;
+import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvDate;
 import lombok.Data;
-import lombok.ToString;
-
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
-/**
- * Класс, представляющий сущность Fragment.
- * Fragment содержит информацию о звонке, включая тип вызова, номера абонентов и временные метки.
- */
 @Data
-@AllArgsConstructor
-@ToString
 public class Fragment {
     /**
      * Тип вызова:
      * - "01" — исходящий вызов,
      * - "02" — входящий вызов.
      */
+    @CsvBindByName(column = "call_type", required = true)
     private String callType;
 
+    @CsvBindByName(column = "caller_msisdn", required = true)
     private String callerMsisdn;
 
+    @CsvBindByName(column = "receiver_msisdn", required = true)
     private String receiverMsisdn;
 
+    @CsvBindByName(column = "start_time", required = true)
+    @CsvDate(value = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime startTime;
 
+    @CsvBindByName(column = "end_time", required = true)
+    @CsvDate(value = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime endTime;
 
-    public static Fragment fromString(String fragmentString) throws IllegalArgumentException {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
-        String[] parts = fragmentString.split(", ");
-        try {
-            return new Fragment(
-                    parts[0],
-                    parts[1],
-                    parts[2],
-                    LocalDateTime.parse(parts[3], formatter),
-                    LocalDateTime.parse(parts[4], formatter)
-            );
-        } catch (IndexOutOfBoundsException e) {
-            throw new IllegalArgumentException("Error parsing fragment");
+    public void validate() {
+        if (!"01".equals(callType) && !"02".equals(callType)) {
+            throw new IllegalArgumentException("Invalid call type: " + callType);
+        }
+
+        if (callerMsisdn == null || callerMsisdn.trim().isEmpty()) {
+            throw new IllegalArgumentException("Caller MSISDN is empty");
+        }
+
+        if (startTime != null && endTime != null && startTime.isAfter(endTime)) {
+            throw new IllegalArgumentException("Start time is after end time");
         }
     }
 }

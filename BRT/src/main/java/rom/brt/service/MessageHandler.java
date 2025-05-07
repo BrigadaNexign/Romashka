@@ -1,8 +1,10 @@
 package rom.brt.service;
 
+import com.opencsv.bean.CsvToBeanBuilder;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import rom.brt.client.HRSClient;
 import rom.brt.dto.*;
@@ -13,6 +15,7 @@ import rom.brt.repository.CallRecordRepository;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -22,10 +25,16 @@ import java.util.regex.Pattern;
 @Service
 @RequiredArgsConstructor
 public class MessageHandler {
+    @Autowired
     private final HRSClient hrsClient;
+    @Autowired
     private final UserService userService;
+    @Autowired
     private final CallRecordRepository callRecordRepository;
+    @Autowired
     private final BillingService billingService;
+    @Autowired
+    private final FragmentMapper fragmentMapper;
     private final Logger logger = LoggerFactory.getLogger(MessageHandler.class);
 
     private static final Pattern CDR_PATTERN = Pattern.compile(
@@ -33,24 +42,10 @@ public class MessageHandler {
     );
 
     public void handleMessage(String message) {
-        Arrays.stream(message.split("\n"))
-                .map(String::trim)
-                .filter(line -> CDR_PATTERN.matcher(line).matches())
-                .forEach(this::handleFragment);
-    }
-
-    private void handleFragment(String fragmentStr) {
-        logger.info("Trying to handle message \"{}\"", fragmentStr);
         try {
-            Fragment fragment = Fragment.fromString(fragmentStr);
-            processCall(fragment);
-        } catch (IllegalArgumentException e) {
-            logger.error(
-                    "Fragment \"{}\" parsing resulted in exception \"{}\"",
-                    fragmentStr,
-                    e.getLocalizedMessage()
-            );
+            fragmentMapper.parseCsv(message).forEach(this::processCall);
         } catch (Exception e) {
+            // TODO: exception handling
             logger.error(e.getLocalizedMessage());
         }
     }
