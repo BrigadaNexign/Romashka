@@ -16,11 +16,14 @@ import lombok.*;
 public class Tariff {
     @Id
     @Column(name = "tariff_id")
-    private Integer id;
+    private Long id;
 
     @Column(name = "tariff_name", nullable = false, unique = true)
     private String name;
 
     @Column(name = "tariff_desc")
     private String description;
+
+    @Column(name = "type_id")
+    private int type;
 }

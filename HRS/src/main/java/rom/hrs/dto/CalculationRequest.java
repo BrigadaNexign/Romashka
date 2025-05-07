@@ -1,22 +1,25 @@
 package rom.hrs.dto;
 
+import lombok.*;
+import rom.hrs.entity.CallType;
+import rom.hrs.exception.InvalidCallTypeException;
+
 import java.time.LocalDate;
 
-public record CalculationRequest(
-        String callType,
-        Subscriber caller,
-        Subscriber receiver,
-        int durationMinutes,
-        int tariffId,
-        LocalDate currentDate,
-        LocalDate paymentDay
-) {
-    public CalculationRequest {
-        if (!callType.matches("01|02")) {
-            throw new IllegalArgumentException("Invalid callType. Must be '01' or '02'");
-        }
-        if (durationMinutes <= 0) {
-            throw new IllegalArgumentException("Duration must be positive");
-        }
+@Data
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class CalculationRequest {
+    private String callType;
+    private Subscriber caller;
+    private Subscriber receiver;
+    private int durationMinutes;
+    private LocalDate currentDate;
+
+    public CallType getCallTypeAsEnum() throws InvalidCallTypeException {
+        return CallType.fromCode(this.callType);
     }
 }

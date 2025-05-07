@@ -1,7 +1,5 @@
 package rom.brt.dto;
 
-import rom.brt.dto.Subscriber;
-
 import java.time.LocalDate;
 
 public record CalculationRequest(
@@ -9,9 +7,7 @@ public record CalculationRequest(
         Subscriber caller,
         Subscriber receiver,
         int durationMinutes,
-        int tariffId,
-        LocalDate currentDate,
-        LocalDate paymentDay
+        LocalDate currentDate
 ) {
     public CalculationRequest {
         if (!callType.matches("01|02")) {

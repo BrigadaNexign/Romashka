@@ -13,11 +13,14 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @ToString
+@Table(
+        name = "fragment",
+        indexes = {
+                @Index(name = "idx_fragment_caller", columnList = "caller_msisdn"),
+                @Index(name = "idx_fragment_time_range", columnList = "start_time, end_time")
+        })
 public class Fragment {
 
-    /**
-     * Уникальный идентификатор записи Fragment.
-     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,27 +30,18 @@ public class Fragment {
      * - "01" — исходящий вызов,
      * - "02" — входящий вызов.
      */
+    @Column(name = "call_type")
     private String callType;
 
-    /**
-     * Номер абонента, инициировавшего звонок.
-     */
+    @Column(name = "caller_msisdn")
     private String callerMsisdn;
 
-    /**
-     * Номер абонента, принимающего звонок.
-     */
+    @Column(name = "receiver_msisdn")
     private String receiverMsisdn;
 
-    /**
-     * Время начала звонка.
-     */
     @Column(name = "start_time")
     private LocalDateTime startTime;
 
-    /**
-     * Время окончания звонка.
-     */
     @Column(name = "end_time")
     private LocalDateTime endTime;
 

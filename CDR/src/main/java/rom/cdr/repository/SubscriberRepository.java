@@ -11,12 +11,4 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @see Subscriber
  */
 @Repository
-public interface SubscriberRepository extends JpaRepository<Subscriber, String> {
-
-    /**
-     * Удаляет абонента по его идентификатору.
-     *
-     * @param msisdn идентификатор абонента
-     */
-    void deleteById(String msisdn);
-}
+public interface SubscriberRepository extends JpaRepository<Subscriber, Integer> { }

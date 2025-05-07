@@ -5,5 +5,5 @@ import org.springframework.stereotype.Repository;
 import rom.hrs.entity.Tariff;
 
 @Repository
-public interface TariffRepository extends JpaRepository<Tariff, Integer> {}
+public interface TariffRepository extends JpaRepository<Tariff, Long> {}
 

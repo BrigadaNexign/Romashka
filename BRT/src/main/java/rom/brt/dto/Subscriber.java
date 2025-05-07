@@ -1,9 +1,14 @@
 package rom.brt.dto;
 
+import java.time.LocalDate;
+
 public record Subscriber(
         Integer id,
         String msisdn,
-        boolean isServiced
+        boolean isServiced,
+        Integer tariffId,
+        Integer minutes,
+        LocalDate paymentDay
 ) {
     public Subscriber {
         if (id != null && id <= 0) {
@@ -15,5 +20,13 @@ public record Subscriber(
         if (id == null && isServiced) {
             throw new IllegalStateException("Subscriber without id cannot be serviced");
         }
+    }
+
+    public static Subscriber fromServicedUser(int id, String msisdn, int tariffId, int minutes, LocalDate paymentDay) {
+        return new Subscriber(id, msisdn, true, tariffId, minutes, paymentDay);
+    }
+
+    public static Subscriber fromForeignUser(String msisdn) {
+        return new Subscriber(null, msisdn, false, null, null, null);
     }
 }
