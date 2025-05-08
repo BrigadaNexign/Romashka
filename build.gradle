@@ -27,32 +27,41 @@ sonar {
     }
 }
 
-subprojects {
+allprojects {
     apply plugin: 'jacoco'
-
+    
     jacoco {
         toolVersion = "0.8.11"
+        reportsDirectory = layout.buildDirectory.dir("reports/jacoco")
     }
-
+    
+    tasks.withType(Test) {
+        useJUnitPlatform()
+        finalizedBy jacocoTestReport
+    }
+    
     jacocoTestReport {
+        dependsOn test
         reports {
             xml.required = true
             html.required = true
         }
-        dependsOn test
     }
 }
 
 task jacocoRootReport(type: JacocoReport) {
-    dependsOn subprojects.test
-    dependsOn subprojects.jacocoTestReport
-    additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
-    sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
-    classDirectories.setFrom files(subprojects.sourceSets.main.output)
+    dependsOn allprojects.test
+    dependsOn allprojects.jacocoTestReport
+    
+    additionalSourceDirs.setFrom files(allprojects.sourceSets.main.allSource.srcDirs)
+    sourceDirectories.setFrom files(allprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories.setFrom files(allprojects.sourceSets.main.output)
     executionData.setFrom fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
 
     reports {
         xml.required = true
         html.required = true
+        xml.outputLocation = layout.buildDirectory.file("reports/jacoco/jacocoTestReport.xml")
+        html.outputLocation = layout.buildDirectory.dir("reports/jacoco/html")
     }
 }
