@@ -1,0 +1,61 @@
+name: Romashka CI
+on:
+  push:
+    branches:
+      - main, dev
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  build:
+    name: Build, Test, Analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'zulu'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      - name: Run tests with code coverage
+        run: ./gradlew test jacocoTestReport
+
+      - name: Verify code coverage
+        run: |
+          # You can add coverage verification here if needed
+          # For example: ./gradlew jacocoTestCoverageVerification
+          echo "Code coverage report generated"
+
+      - name: SonarQube
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          # Add other SonarQube properties if needed
+          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Only needed for PR decoration
+        run: ./gradlew sonar --info
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: build/reports/jacoco/test/html/
+          if-no-files-found: warn
