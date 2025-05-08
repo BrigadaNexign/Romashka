@@ -1,3 +1,5 @@
+import org.sonarqube.gradle.SonarQubePlugin
+
 plugins {
     id 'java'
     id "org.sonarqube" version "6.0.1.5171"
@@ -18,12 +20,14 @@ allprojects {
 }
 
 subprojects {
-    plugins.withType(org.sonarqube.gradle.SonarQubePlugin) {
-        sonar {
-            properties {
-                property "sonar.projectKey", "BrigadaNexign_Romashka"
-                property "sonar.organization", "brigadanexign"
-                property "sonar.host.url", "https://sonarcloud.io"
+    plugins.withType(SonarQubePlugin).tap {
+        configureEach {
+            sonar {
+                properties {
+                    property "sonar.projectKey", "BrigadaNexign_Romashka"
+                    property "sonar.organization", "brigadanexign"
+                    property "sonar.host.url", "https://sonarcloud.io"
+                }
             }
         }
     }
