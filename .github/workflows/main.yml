@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: 17
-          distribution: 'temurin'  # Изменено на temurin для лучшей совместимости
+          distribution: 'temurin'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -60,7 +60,7 @@ jobs:
       - name: SonarQube analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Для интеграции с PR
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./gradlew sonar \
             -Dsonar.coverage.jacoco.xmlReportPaths="BRT/build/reports/jacoco/test/jacocoTestReport.xml,CDR/build/reports/jacoco/test/jacocoTestReport.xml,HRS/build/reports/jacoco/test/jacocoTestReport.xml" \
