@@ -8,9 +8,9 @@ import rom.brt.dto.CalculationResponse;
 import rom.brt.dto.Fragment;
 import rom.brt.entity.CallRecord;
 import rom.brt.entity.User;
-import rom.brt.exceptions.BusinessException;
-import rom.brt.exceptions.EmptyResponseFieldException;
-import rom.brt.exceptions.FailedResponseException;
+import rom.brt.exception.BusinessException;
+import rom.brt.exception.EmptyResponseFieldException;
+import rom.brt.exception.FailedResponseException;
 
 @Service
 @RequiredArgsConstructor

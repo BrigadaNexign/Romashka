@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import rom.brt.client.HRSClient;
 import rom.brt.dto.*;
 import rom.brt.entity.User;
-import rom.brt.exceptions.BusinessException;
+import rom.brt.exception.BusinessException;
 
 @Service
 @RequiredArgsConstructor

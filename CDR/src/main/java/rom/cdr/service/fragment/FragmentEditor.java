@@ -3,11 +3,10 @@ package rom.cdr.service.fragment;
 import lombok.RequiredArgsConstructor;
 import rom.cdr.entity.Fragment;
 import org.springframework.stereotype.Service;
-import rom.cdr.exceptions.EmptyFieldException;
+import rom.cdr.exception.EmptyFieldException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor

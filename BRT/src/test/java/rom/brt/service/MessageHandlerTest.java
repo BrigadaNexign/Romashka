@@ -8,16 +8,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import rom.brt.client.HRSClient;
 import rom.brt.dto.*;
 import rom.brt.entity.User;
-import rom.brt.exceptions.BusinessException;
-import rom.brt.exceptions.CsvParsingException;
-import rom.brt.exceptions.FailedResponseException;
+import rom.brt.exception.BusinessException;
+import rom.brt.exception.CsvParsingException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class MessageHandlerTest {

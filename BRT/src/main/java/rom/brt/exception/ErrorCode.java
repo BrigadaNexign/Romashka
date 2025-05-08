@@ -1,4 +1,4 @@
-package rom.brt.exceptions;
+package rom.brt.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
