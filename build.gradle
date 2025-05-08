@@ -27,10 +27,6 @@ sonar {
     }
 }
 
-jacoco {
-    toolVersion = "0.8.11"
-}
-
 subprojects {
     apply plugin: 'jacoco'
 
