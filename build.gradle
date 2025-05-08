@@ -1,0 +1,30 @@
+plugins {
+    id 'java'
+    id "org.sonarqube" version "6.0.1.5171"
+}
+
+allprojects {
+    apply plugin: 'java-library'
+
+    repositories {
+        mavenCentral()
+    }
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+}
+
+subprojects {
+    plugins.withType(org.sonarqube.gradle.SonarQubePlugin) {
+        sonar {
+            properties {
+                property "sonar.projectKey", "BrigadaNexign_Romashka"
+                property "sonar.organization", "brigadanexign"
+                property "sonar.host.url", "https://sonarcloud.io"
+            }
+        }
+    }
+}
