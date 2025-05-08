@@ -37,6 +37,6 @@ dependencies {
 //    gradleVersion = '8.13'
 //}
 
-//test {
-//    useJUnitPlatform()
-//}
+test {
+    useJUnitPlatform()
+}

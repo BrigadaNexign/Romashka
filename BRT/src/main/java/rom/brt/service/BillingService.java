@@ -17,17 +17,9 @@ public class BillingService {
     private final Logger logger = LoggerFactory.getLogger(BillingService.class);
 
     public void processBilling(User user, CalculationResponse response) {
-        if (response.cost() != null) {
-            user.setBalance(user.getBalance().subtract(BigDecimal.valueOf(response.cost())));
-        }
-
-        if (response.nextPaymentDate() != null) {
-            user.getUserParams().setPaymentDay(response.nextPaymentDate());
-        }
-
-        if (response.remainingMinutes() != null) {
-            user.getUserParams().setMinutes(response.remainingMinutes());
-        }
+        user.setBalance(user.getBalance().subtract(BigDecimal.valueOf(response.getCost())));
+        user.getUserParams().setPaymentDay(response.getNextPaymentDate());
+        user.getUserParams().setMinutes(response.getRemainingMinutes());
 
         userRepository.save(user);
         logger.info("User information updated: {}\n", user);
