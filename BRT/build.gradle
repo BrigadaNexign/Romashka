@@ -39,4 +39,18 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/config/**',
+                    '**/exception/**',
+                    '**/entity/**',
+                    '**/dto/**'
+            ])
+        }))
+    }
 }

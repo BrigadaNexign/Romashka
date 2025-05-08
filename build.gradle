@@ -5,6 +5,8 @@ plugins {
 }
 
 allprojects {
+    apply plugin: 'jacoco'
+
     repositories {
         mavenCentral()
     }
@@ -13,9 +15,30 @@ allprojects {
         toolchain {
             languageVersion = JavaLanguageVersion.of(17)
         }
-
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    jacoco {
+        toolVersion = "0.8.11"
+        reportsDirectory = layout.buildDirectory.dir("reports/jacoco")
+    }
+
+    plugins.withType(JavaPlugin).tap {
+        configureEach {
+            tasks.named('test') {
+                useJUnitPlatform()
+                finalizedBy jacocoTestReport
+            }
+
+            jacocoTestReport {
+                dependsOn test
+                reports {
+                    xml.required = true
+                    html.required = true
+                }
+            }
+        }
     }
 }
 
@@ -24,20 +47,41 @@ sonar {
         property "sonar.projectKey", "BrigadaNexign_Romashka"
         property "sonar.organization", "brigadanexign"
         property "sonar.host.url", "https://sonarcloud.io"
+
+        property "sonar.coverage.jacoco.xmlReportPaths",
+                "BRT/build/reports/jacoco/test/jacocoTestReport.xml," +
+                        "CDR/build/reports/jacoco/test/jacocoTestReport.xml," +
+                        "HRS/build/reports/jacoco/test/jacocoTestReport.xml"
+
+        property "sonar.coverage.exclusions", """
+            **/exception/**,
+            **/dto/**,
+            **/entity/**,
+            **/*Exception.java,
+            **/*Dto.java
+        """
+
+        property "sonar.sources", "src/main/java"
+        property "sonar.tests", "src/test/java"
+        property "sonar.java.binaries", "build/classes/java/main"
+
+        property "sonar.modules", "BRT,CDR,HRS"
     }
 }
 
-jacoco {
-    toolVersion = "0.8.11"
-}
 
-jacocoTestReport {
+tasks.register('jacocoRootReport', JacocoReport) {
+    dependsOn allprojects.collect { it.tasks.findByName('test') }.findAll { it != null }
+
+    additionalSourceDirs.setFrom files(allprojects.sourceSets.main.allSource.srcDirs)
+    sourceDirectories.setFrom files(allprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories.setFrom files(allprojects.sourceSets.main.output)
+    executionData.setFrom fileTree(project.rootDir.absolutePath).include("**/build/jacoco/test/*.exec")
+
     reports {
         xml.required = true
         html.required = true
+        xml.outputLocation = layout.buildDirectory.file("reports/jacoco/jacocoTestReport.xml")
+        html.outputLocation = layout.buildDirectory.dir("reports/jacoco/html")
     }
-}
-
-plugins.withType(JacocoPlugin) {
-    tasks["test"].finalizedBy 'jacocoTestReport'
 }

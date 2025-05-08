@@ -1,4 +1,4 @@
-package rom.cdr.exceptions;
+package rom.cdr.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,22 +1,19 @@
 package rom.cdr.service.record;
 
 import com.opencsv.CSVWriter;
-import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import rom.cdr.entity.Fragment;
-import rom.cdr.exceptions.EmptyFieldException;
+import rom.cdr.exception.EmptyFieldException;
 import rom.cdr.service.fragment.FragmentEditor;
 import rom.cdr.service.sender.ReportQueueSender;
 
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class RecordProcessor {
