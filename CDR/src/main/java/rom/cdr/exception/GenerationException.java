@@ -1,6 +1,4 @@
-package rom.cdr.exceptions;
-
-import lombok.Getter;
+package rom.cdr.exception;
 
 public class GenerationException extends Exception {
     private ErrorCode errorCode;

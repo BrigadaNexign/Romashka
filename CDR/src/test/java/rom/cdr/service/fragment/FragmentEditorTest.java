@@ -8,7 +8,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import rom.cdr.entity.Fragment;
-import rom.cdr.exceptions.EmptyFieldException;
+import rom.cdr.exception.EmptyFieldException;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;

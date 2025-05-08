@@ -2,9 +2,11 @@ name: Romashka CI
 on:
   push:
     branches:
-      - main, dev
+      - main
+      - dev
   pull_request:
     types: [opened, synchronize, reopened]
+
 jobs:
   build:
     name: Build, Test, Analyze
@@ -12,20 +14,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: 17
-          distribution: 'zulu'
+          distribution: 'temurin'  # Изменено на temurin для лучшей совместимости
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
       - name: Cache Gradle packages
         uses: actions/cache@v4
         with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-          restore-keys: ${{ runner.os }}-gradle
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Cache SonarQube packages
         uses: actions/cache@v4
@@ -34,28 +42,38 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      - name: Build with Gradle
-        run: ./gradlew build
-
-      - name: Run tests with code coverage
-        run: ./gradlew test jacocoTestReport
-
-      - name: Verify code coverage
+      - name: Build and test with coverage
         run: |
-          # You can add coverage verification here if needed
-          # For example: ./gradlew jacocoTestCoverageVerification
-          echo "Code coverage report generated"
+          ./gradlew clean test jacocoTestReport jacocoRootReport --stacktrace
+          echo "=== Generated coverage reports ==="
+          find . -name "jacoco*.xml" -o -name "*.exec" | xargs ls -la
 
-      - name: SonarQube
+      - name: Verify Jacoco reports exist
+        run: |
+          if [ ! -f "BRT/build/reports/jacoco/test/jacocoTestReport.xml" ] || \
+             [ ! -f "CDR/build/reports/jacoco/test/jacocoTestReport.xml" ] || \
+             [ ! -f "HRS/build/reports/jacoco/test/jacocoTestReport.xml" ]; then
+            echo "::error::Jacoco reports are missing!"
+            exit 1
+          fi
+
+      - name: SonarQube analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          # Add other SonarQube properties if needed
-          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Only needed for PR decoration
-        run: ./gradlew sonar --info
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Для интеграции с PR
+        run: |
+          ./gradlew sonar \
+            -Dsonar.coverage.jacoco.xmlReportPaths="BRT/build/reports/jacoco/test/jacocoTestReport.xml,CDR/build/reports/jacoco/test/jacocoTestReport.xml,HRS/build/reports/jacoco/test/jacocoTestReport.xml" \
+            -Dsonar.coverage.exclusions="**/exception/**,**/dto/**,**/entity/**,**/*Exception.java,**/*Dto.java" \
+            --stacktrace
 
-      - name: Upload coverage report
+      - name: Upload coverage reports
         uses: actions/upload-artifact@v4
         with:
-          name: code-coverage-report
-          path: build/reports/jacoco/test/html/
+          name: coverage-reports
+          path: |
+            BRT/build/reports/jacoco/
+            CDR/build/reports/jacoco/
+            HRS/build/reports/jacoco/
+            build/reports/jacoco/
           if-no-files-found: warn

@@ -1,6 +1,7 @@
 package rom.brt.service;
 
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -9,10 +10,10 @@ import org.springframework.stereotype.Service;
 
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ReportConsumer {
     @Autowired
-    private MessageHandler messageHandler;
+    private final MessageHandler messageHandler;
     private final Logger logger = LoggerFactory.getLogger(ReportConsumer.class);
 
     @RabbitListener(queues = "cdr.queue")
