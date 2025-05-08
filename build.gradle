@@ -27,17 +27,32 @@ sonar {
     }
 }
 
-jacoco {
-    toolVersion = "0.8.11"
+subprojects {
+    apply plugin: 'jacoco'
+
+    jacoco {
+        toolVersion = "0.8.11"
+    }
+
+    jacocoTestReport {
+        reports {
+            xml.required = true
+            html.required = true
+        }
+        dependsOn test
+    }
 }
 
-jacocoTestReport {
+task jacocoRootReport(type: JacocoReport) {
+    dependsOn subprojects.test
+    dependsOn subprojects.jacocoTestReport
+    additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+    sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories.setFrom files(subprojects.sourceSets.main.output)
+    executionData.setFrom fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
+
     reports {
         xml.required = true
         html.required = true
     }
-}
-
-plugins.withType(JacocoPlugin) {
-    tasks["test"].finalizedBy 'jacocoTestReport'
 }
