@@ -69,7 +69,6 @@ sonar {
     }
 }
 
-
 tasks.register('jacocoRootReport', JacocoReport) {
     dependsOn allprojects.collect { it.tasks.findByName('test') }.findAll { it != null }
 
