@@ -3,9 +3,11 @@ package rom.cdr.service.fragment;
 import lombok.RequiredArgsConstructor;
 import rom.cdr.entity.Fragment;
 import org.springframework.stereotype.Service;
+import rom.cdr.exceptions.EmptyFieldException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -31,38 +33,36 @@ public class FragmentEditor {
         return fragment;
     }
 
-    public String formatFragment(Fragment fragment) throws IllegalArgumentException {
-        checkFragment(fragment);
-
+    public String[] formatFragment(Fragment fragment) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
-        return String.join(", ",
+        return new String[]{
                 fragment.getCallType(),
                 fragment.getCallerMsisdn(),
                 fragment.getReceiverMsisdn(),
                 fragment.getStartTime().format(formatter),
                 fragment.getEndTime().format(formatter)
-        );
+        };
     }
 
-    private void checkFragment(Fragment fragment) throws IllegalArgumentException {
+    public void checkFragment(Fragment fragment) throws EmptyFieldException {
         if (fragment == null) {
-            throw new IllegalArgumentException("Fragment cannot be null");
+            throw new EmptyFieldException("Fragment is null");
         }
 
-        if (fragment.getCallType() == null) {
-            throw new IllegalArgumentException("CallType cannot be null");
+        if (fragment.getCallType() == null || fragment.getCallType().trim().isEmpty()) {
+            throw new EmptyFieldException("callType");
         }
-        if (fragment.getCallerMsisdn() == null) {
-            throw new IllegalArgumentException("CallerMsisdn cannot be null");
+        if (fragment.getCallerMsisdn() == null || fragment.getCallerMsisdn().trim().isEmpty()) {
+            throw new EmptyFieldException("callerMsisdn");
         }
-        if (fragment.getReceiverMsisdn() == null) {
-            throw new IllegalArgumentException("ReceiverMsisdn cannot be null");
+        if (fragment.getReceiverMsisdn() == null || fragment.getReceiverMsisdn().trim().isEmpty()) {
+            throw new EmptyFieldException("receiverMsisdn");
         }
         if (fragment.getStartTime() == null) {
-            throw new IllegalArgumentException("StartTime cannot be null");
+            throw new EmptyFieldException("startTime");
         }
         if (fragment.getEndTime() == null) {
-            throw new IllegalArgumentException("EndTime cannot be null");
+            throw new EmptyFieldException("endTime");
         }
     }
 }

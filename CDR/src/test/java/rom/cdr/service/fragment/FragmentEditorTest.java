@@ -8,7 +8,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import rom.cdr.entity.Fragment;
+import rom.cdr.exceptions.EmptyFieldException;
+
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -73,7 +76,7 @@ class FragmentEditorTest {
         fragment.setEndTime(endTime);
 
         String expected = "01, 79991112233, 79992223344, 2024-01-01T12:00:00, 2024-01-01T12:05:00";
-        String actual = fragmentEditor.formatFragment(fragment);
+        String actual = Arrays.toString(fragmentEditor.formatFragment(fragment));
 
         assertEquals(expected, actual);
     }
