@@ -1,0 +1,43 @@
+plugins {
+    id 'java'
+    id "org.sonarqube" version "6.0.1.5171"
+    id "jacoco"
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+sonar {
+    properties {
+        property "sonar.projectKey", "BrigadaNexign_Romashka"
+        property "sonar.organization", "brigadanexign"
+        property "sonar.host.url", "https://sonarcloud.io"
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+plugins.withType(JacocoPlugin) {
+    tasks["test"].finalizedBy 'jacocoTestReport'
+}

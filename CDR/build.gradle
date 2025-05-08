@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'rom.cdr'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.2'
 
 sourceSets {
     sourceSets {
@@ -14,12 +14,6 @@ sourceSets {
                 srcDirs = ['src/test/java']
             }
         }
-    }
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
@@ -54,8 +48,9 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
     implementation 'org.liquibase:liquibase-core'
+    implementation 'com.opencsv:opencsv:5.8'
 }
 
-tasks.named('test') {
+test {
     useJUnitPlatform()
 }

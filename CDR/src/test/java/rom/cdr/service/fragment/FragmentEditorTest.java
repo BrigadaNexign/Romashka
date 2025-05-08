@@ -8,7 +8,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import rom.cdr.entity.Fragment;
+import rom.cdr.exceptions.EmptyFieldException;
+
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -72,40 +75,32 @@ class FragmentEditorTest {
         fragment.setStartTime(startTime);
         fragment.setEndTime(endTime);
 
-        String expected = "01, 79991112233, 79992223344, 2024-01-01T12:00:00, 2024-01-01T12:05:00";
-        String actual = fragmentEditor.formatFragment(fragment);
+        String expected = "[01, 79991112233, 79992223344, 2024-01-01T12:00:00, 2024-01-01T12:05:00]";
+        String actual = Arrays.toString(fragmentEditor.formatFragment(fragment));
 
         assertEquals(expected, actual);
     }
 
-    @Test
-    void formatFragment_FragmentNull() {
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> fragmentEditor.formatFragment(null)
-        );
-        assertEquals("Fragment cannot be null", exception.getMessage());
-    }
-
     @ParameterizedTest
     @MethodSource("provideNullFragmentFields")
-    void formatFragment_FragmentFieldNull(Fragment fragment, String expectedMessage) {
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> fragmentEditor.formatFragment(fragment)
+    void checkFragment_FragmentFieldNull(Fragment fragment, String expectedMessage) {
+        EmptyFieldException exception = assertThrows(
+                EmptyFieldException.class,
+                () -> fragmentEditor.checkFragment(fragment)
         );
-        assertEquals(expectedMessage, exception.getMessage());
+        assertTrue(exception.getMessage().contains(expectedMessage));
     }
 
     private static Stream<Arguments> provideNullFragmentFields() {
         Fragment fullFragment = FragmentTestData.createTestFragment();
 
         return Stream.of(
-                Arguments.of(createFragmentWithNullField(fullFragment, "callType"), "CallType cannot be null"),
-                Arguments.of(createFragmentWithNullField(fullFragment, "callerMsisdn"), "CallerMsisdn cannot be null"),
-                Arguments.of(createFragmentWithNullField(fullFragment, "receiverMsisdn"), "ReceiverMsisdn cannot be null"),
-                Arguments.of(createFragmentWithNullField(fullFragment, "startTime"), "StartTime cannot be null"),
-                Arguments.of(createFragmentWithNullField(fullFragment, "endTime"), "EndTime cannot be null")
+                Arguments.of(createFragmentWithNullField(fullFragment, "callType"), "callType"),
+                Arguments.of(createFragmentWithNullField(fullFragment, "callerMsisdn"), "callerMsisdn"),
+                Arguments.of(createFragmentWithNullField(fullFragment, "receiverMsisdn"), "receiverMsisdn"),
+                Arguments.of(createFragmentWithNullField(fullFragment, "startTime"), "startTime"),
+                Arguments.of(createFragmentWithNullField(fullFragment, "endTime"), "endTime"),
+                Arguments.of(null, "Fragment")
         );
     }
 
