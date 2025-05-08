@@ -1,0 +1,79 @@
+name: Romashka CI
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    name: Build, Test, Analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'temurin'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Build and test with coverage
+        run: |
+          ./gradlew clean test jacocoTestReport jacocoRootReport --stacktrace
+          echo "=== Generated coverage reports ==="
+          find . -name "jacoco*.xml" -o -name "*.exec" | xargs ls -la
+
+      - name: Verify Jacoco reports exist
+        run: |
+          if [ ! -f "BRT/build/reports/jacoco/test/jacocoTestReport.xml" ] || \
+             [ ! -f "CDR/build/reports/jacoco/test/jacocoTestReport.xml" ] || \
+             [ ! -f "HRS/build/reports/jacoco/test/jacocoTestReport.xml" ]; then
+            echo "::error::Jacoco reports are missing!"
+            exit 1
+          fi
+
+      - name: SonarQube analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./gradlew sonar \
+            -Dsonar.coverage.jacoco.xmlReportPaths="BRT/build/reports/jacoco/test/jacocoTestReport.xml,CDR/build/reports/jacoco/test/jacocoTestReport.xml,HRS/build/reports/jacoco/test/jacocoTestReport.xml" \
+            -Dsonar.coverage.exclusions="**/exception/**,**/dto/**,**/entity/**,**/*Exception.java,**/*Dto.java" \
+            --stacktrace
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            BRT/build/reports/jacoco/
+            CDR/build/reports/jacoco/
+            HRS/build/reports/jacoco/
+            build/reports/jacoco/
+          if-no-files-found: warn
