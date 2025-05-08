@@ -1,5 +1,6 @@
 package rom.brt.service;
 
+import org.antlr.v4.runtime.FailedPredicateException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -10,142 +11,215 @@ import rom.brt.dto.*;
 import rom.brt.entity.User;
 import rom.brt.exception.BusinessException;
 import rom.brt.exception.CsvParsingException;
+import rom.brt.exception.FailedResponseException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class MessageHandlerTest {
 
-    @Mock
-    private HRSClient hrsClient;
-
-    @Mock
-    private UserService userService;
-
-    @Mock
-    private FragmentMapper fragmentMapper;
-
-    @Mock
-    private RequestBuilder requestBuilder;
-
-    @Mock
-    private ResponseHandler responseHandler;
+    @Mock private HRSClient hrsClient;
+    @Mock private UserService userService;
+    @Mock private FragmentMapper fragmentMapper;
+    @Mock private RequestBuilder requestBuilder;
+    @Mock private ResponseHandler responseHandler;
 
     @InjectMocks
     private MessageHandler messageHandler;
 
+    // Тесты для handleMessage
+
     @Test
-    void handleMessage_shouldLogErrorWhenExceptionOccurs() throws CsvParsingException {
-        String csvMessage = "invalid,csv,data";
-        when(fragmentMapper.parseCsv(csvMessage)).thenThrow(new RuntimeException("Parsing error"));
+    void handleMessage_shouldProcessMultipleFragments() throws BusinessException {
+        String csvMessage = "test,csv,data";
+        Fragment fragment1 = createTestFragment("01", "79001112233", "79002223344");
+        Fragment fragment2 = createTestFragment("02", "79003334455", "79004445566");
+
+        when(fragmentMapper.parseCsv(csvMessage)).thenReturn(List.of(fragment1, fragment2));
+        when(userService.findUser(anyString())).thenReturn(createServicedUser(1));
 
         messageHandler.handleMessage(csvMessage);
 
         verify(fragmentMapper).parseCsv(csvMessage);
-        verifyNoMoreInteractions(userService, requestBuilder, hrsClient, responseHandler);
+        verify(userService, times(4)).findUser(anyString());
+        verify(responseHandler, times(2)).handleCalculationResponse(any(), any(), any());
     }
 
     @Test
-    void processCall_shouldSkipNonServicedCaller() throws BusinessException {
-        Fragment fragment = new Fragment();
-        fragment.setCallerMsisdn("79001112233");
-        fragment.setReceiverMsisdn("79002223344");
+    void handleMessage_shouldHandleEmptyFragmentList() throws CsvParsingException {
+        String csvMessage = "empty,csv,data";
+        when(fragmentMapper.parseCsv(csvMessage)).thenReturn(Collections.emptyList());
 
-        User nonServicedCaller = new User();
-        nonServicedCaller.setUserId(-1);
+        messageHandler.handleMessage(csvMessage);
+
+        verify(fragmentMapper).parseCsv(csvMessage);
+        verifyNoInteractions(userService, requestBuilder, hrsClient, responseHandler);
+    }
+
+    @Test
+    void handleMessage_shouldHandleCsvParsingException() throws CsvParsingException {
+        String csvMessage = "invalid,csv,data";
+        when(fragmentMapper.parseCsv(csvMessage)).thenThrow(new CsvParsingException(new IllegalArgumentException("Error")));
+
+        messageHandler.handleMessage(csvMessage);
+
+        verify(fragmentMapper).parseCsv(csvMessage);
+        verifyNoInteractions(userService, requestBuilder, hrsClient, responseHandler);
+    }
+
+    // Тесты для processCall
+
+    @Test
+    void processCall_shouldSkipNonServicedCaller() throws BusinessException {
+        Fragment fragment = createTestFragment("01", "79001112233", "79002223344");
+        User nonServicedCaller = createNonServicedUser();
 
         when(userService.findUser("79001112233")).thenReturn(nonServicedCaller);
 
         messageHandler.processCall(fragment);
 
         verify(userService).findUser("79001112233");
+        verify(userService, never()).createServicedSubscriberFromRecord(nonServicedCaller);
+        verifyNoInteractions(requestBuilder, hrsClient, responseHandler);
     }
 
     @Test
-    void processCall_shouldProcessServicedCallerAndServicedReceiver() throws BusinessException {
-        Fragment fragment = new Fragment();
-        fragment.setCallerMsisdn("79001112233");
-        fragment.setReceiverMsisdn("79002223344");
-        fragment.setCallType("01");
-        fragment.setStartTime(LocalDateTime.now());
-        fragment.setEndTime(LocalDateTime.now().plusMinutes(5));
+    void processCall_shouldProcessIncomingCall() throws BusinessException {
+        Fragment fragment = createTestFragment("02", "79002223333", "79002223344");
+        User caller = createServicedUser(1);
+        User receiver = createServicedUser(2);
 
-        User callerRecord = new User();
-        callerRecord.setUserId(1);
-        callerRecord.setMsisdn("79001112233");
-        callerRecord.setTariffId(1);
+        when(userService.findUser("79002223333")).thenReturn(caller);
+        when(userService.findUser("79002223344")).thenReturn(receiver);
+        assertNotNull(caller, "Caller should not be null");
+        assertNotNull(receiver, "Receiver should not be null");
 
-        User receiverRecord = new User();
-        receiverRecord.setUserId(2);
-        receiverRecord.setMsisdn("79002223344");
-        receiverRecord.setTariffId(2);
-
-        Subscriber caller = Subscriber.fromServicedUser(1, "79001112233", 1, 100, LocalDate.now());
-        Subscriber receiver = Subscriber.fromServicedUser(2, "79002223344", 2, 200, LocalDate.now());
-
-        CalculationRequest request = new CalculationRequest(
-                "01", caller, receiver, 5, LocalDate.now());
-        CalculationResponse response = new CalculationResponse(
-                true, 10.0, "11", "Standard tariff", 95, LocalDate.now().plusMonths(1), null, null);
-
-        when(userService.findUser("79001112233")).thenReturn(callerRecord);
-        when(userService.findUser("79002223344")).thenReturn(receiverRecord);
-        when(userService.createServicedSubscriberFromRecord(callerRecord)).thenReturn(caller);
-        when(userService.createServicedSubscriberFromRecord(receiverRecord)).thenReturn(receiver);
-        when(requestBuilder.build(fragment, caller, receiver)).thenReturn(request);
-        when(hrsClient.calculateCost(request)).thenReturn(response);
+        mockSuccessfulProcessing(fragment, caller, receiver);
 
         messageHandler.processCall(fragment);
 
-        verify(userService).findUser("79001112233");
-        verify(userService).findUser("79002223344");
-        verify(requestBuilder).build(fragment, caller, receiver);
-        verify(hrsClient).calculateCost(request);
-        verify(responseHandler).handleCalculationResponse(callerRecord, fragment, response);
+        verify(responseHandler).handleCalculationResponse(eq(caller), eq(fragment), any());
     }
 
     @Test
-    void processCall_shouldProcessServicedCallerAndForeignReceiver() throws BusinessException {
-        Fragment fragment = new Fragment();
-        fragment.setCallerMsisdn("79001112233");
-        fragment.setReceiverMsisdn("79002223344");
-        fragment.setCallType("01");
-        fragment.setStartTime(LocalDateTime.now());
-        fragment.setEndTime(LocalDateTime.now().plusMinutes(5));
+    void processCall_shouldHandleHrsFailure() throws BusinessException {
+        // Given
+        Fragment fragment = createTestFragment("01", "79001112233", "79002223344");
+        User caller = createServicedUser(1);
+        User receiver = createServicedUser(2);
 
-        User callerRecord = new User();
-        callerRecord.setUserId(1);
-        callerRecord.setMsisdn("79001112233");
-        callerRecord.setTariffId(1);
-
-        User foreignReceiverRecord = new User();
-        foreignReceiverRecord.setUserId(-1);
-        foreignReceiverRecord.setMsisdn("79002223344");
-
-        Subscriber caller = Subscriber.fromServicedUser(1, "79001112233", 1, 100, LocalDate.now());
-        Subscriber receiver = Subscriber.fromForeignUser("79002223344");
+        Subscriber callerSub = createServicedSubscriber(1, "79001112233", 1);
+        Subscriber receiverSub = createServicedSubscriber(2, "79002223344", 2);
 
         CalculationRequest request = new CalculationRequest(
-                "01", caller, receiver, 5, LocalDate.now());
-        CalculationResponse response = new CalculationResponse(
-                true, 15.0, "11", "Standard tariff", 95, LocalDate.now().plusMonths(1), null, null);
+                "01", callerSub, receiverSub, 5, LocalDate.now());
 
-        when(userService.findUser("79001112233")).thenReturn(callerRecord);
-        when(userService.findUser("79002223344")).thenReturn(foreignReceiverRecord);
-        when(userService.createServicedSubscriberFromRecord(callerRecord)).thenReturn(caller);
-        when(userService.createForeignSubscriberFromRecord(foreignReceiverRecord)).thenReturn(receiver);
-        when(requestBuilder.build(fragment, caller, receiver)).thenReturn(request);
-        when(hrsClient.calculateCost(request)).thenReturn(response);
+        // Настройка моков
+        when(userService.findUser("79001112233")).thenReturn(caller);
+        when(userService.findUser("79002223344")).thenReturn(receiver);
+        when(userService.createServicedSubscriberFromRecord(caller)).thenReturn(callerSub);
+        when(userService.createServicedSubscriberFromRecord(receiver)).thenReturn(receiverSub);
+        when(requestBuilder.build(fragment, callerSub, receiverSub)).thenReturn(request);
+
+        // Используем willAnswer для генерации исключения
+        given(hrsClient.calculateCost(request)).willAnswer(invocation -> {
+            throw new FailedResponseException("code", "message");
+        });
+
+        // When/Then
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> messageHandler.processCall(fragment));
+
+        // Проверяем сообщение исключения
+        assertTrue(exception.getMessage().contains("message"));
+        verifyNoInteractions(responseHandler);
+    }
+
+    @Test
+    void processCall_shouldLogWhenReceiverIsForeign() throws BusinessException {
+        Fragment fragment = createTestFragment("01", "79001112233", "79002223344");
+        User caller = createServicedUser(1);
+        User foreignReceiver = createNonServicedUser();
+
+        when(userService.findUser("79001112233")).thenReturn(caller);
+        when(userService.findUser("79002223344")).thenReturn(foreignReceiver);
+        when(userService.createServicedSubscriberFromRecord(caller))
+                .thenReturn(createServicedSubscriber(1, "79001112233", 1));
+        when(userService.createForeignSubscriberFromRecord(foreignReceiver))
+                .thenReturn(Subscriber.fromForeignUser("79002223344"));
+
+        assertNotNull(caller, "Caller should not be null");
+        assertNotNull(foreignReceiver, "Receiver should not be null");
+
+        mockSuccessfulProcessing(fragment, caller, foreignReceiver);
 
         messageHandler.processCall(fragment);
 
-        verify(userService).findUser("79001112233");
-        verify(userService).findUser("79002223344");
-        verify(requestBuilder).build(fragment, caller, receiver);
-        verify(hrsClient).calculateCost(request);
-        verify(responseHandler).handleCalculationResponse(callerRecord, fragment, response);
+        verify(responseHandler).handleCalculationResponse(eq(caller), eq(fragment), any());
+    }
+
+    // Вспомогательные методы
+
+    private Fragment createTestFragment(String callType, String caller, String receiver) {
+        Fragment fragment = new Fragment();
+        fragment.setCallType(callType);
+        fragment.setCallerMsisdn(caller);
+        fragment.setReceiverMsisdn(receiver);
+        fragment.setStartTime(LocalDateTime.now());
+        fragment.setEndTime(LocalDateTime.now().plusMinutes(5));
+        return fragment;
+    }
+
+    private User createServicedUser(int userId) {
+        User user = new User();
+        user.setUserId(userId);
+        user.setMsisdn("790011" + userId + "1111");
+        user.setTariffId(1);
+        return user;
+    }
+
+    private User createNonServicedUser() {
+        User user = new User();
+        user.setUserId(-1);
+        user.setMsisdn("79009998877");
+        return user;
+    }
+
+    private Subscriber createServicedSubscriber(int id, String msisdn, int tariffId) {
+        return Subscriber.fromServicedUser(id, msisdn, tariffId, 100, LocalDate.now());
+    }
+
+    private void mockSuccessfulProcessing(Fragment fragment, User caller, User receiver) throws BusinessException {
+        Subscriber callerSub = createServicedSubscriber(caller.getUserId(), caller.getMsisdn(), caller.getTariffId());
+        Subscriber receiverSub = receiver.getUserId() == -1
+                ? Subscriber.fromForeignUser(receiver.getMsisdn())
+                : createServicedSubscriber(receiver.getUserId(), receiver.getMsisdn(), receiver.getTariffId());
+
+        when(userService.createServicedSubscriberFromRecord(caller)).thenReturn(callerSub);
+        if (receiver.getUserId() == -1) {
+            when(userService.createForeignSubscriberFromRecord(receiver)).thenReturn(receiverSub);
+        } else {
+            when(userService.createServicedSubscriberFromRecord(receiver)).thenReturn(receiverSub);
+        }
+
+        assertNotNull(callerSub, "Caller should not be null");
+        assertNotNull(receiverSub, "Receiver should not be null");
+        assertNotNull(caller, "Caller should not be null");
+        assertNotNull(receiver, "Receiver should not be null");
+
+        CalculationRequest request = new CalculationRequest(
+                fragment.getCallType(), callerSub, receiverSub, 5, LocalDate.now());
+        CalculationResponse response = new CalculationResponse(
+                true, 10.0, "11", "Tariff", 95, LocalDate.now().plusMonths(1), null, null);
+
+        when(requestBuilder.build(fragment, callerSub, receiverSub)).thenReturn(request);
+        when(hrsClient.calculateCost(request)).thenReturn(response);
     }
 }

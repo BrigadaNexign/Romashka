@@ -40,7 +40,7 @@ public class MessageHandler {
         Subscriber caller;
         Subscriber receiver;
 
-        if (callerRecord.getUserId() == -1) {
+        if (callerRecord.getUserId().equals(-1)) {
             logger.info("Caller is not serviced by Romashka. Terminating fragment processing");
             return;
         }
@@ -48,7 +48,7 @@ public class MessageHandler {
         caller = userService.createServicedSubscriberFromRecord(callerRecord);
         logger.debug("Created caller: {}", caller);
 
-        if (receiverRecord.getUserId() == -1) {
+        if (receiverRecord.getUserId().equals(-1)) {
             logger.debug("Receiver {} is not serviced by Romashka", receiverRecord.getMsisdn());
             receiver = userService.createForeignSubscriberFromRecord(receiverRecord);
         } else {
