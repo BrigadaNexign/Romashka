@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rom.cdr.entity.Fragment;
+import rom.cdr.exception.ConflictingCallsException;
 import rom.cdr.repository.FragmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,14 +39,16 @@ public class FragmentService {
             String caller,
             String receiver,
             LocalDateTime start,
-            LocalDateTime end) {
+            LocalDateTime end
+    ) throws ConflictingCallsException {
 
         if (caller == null || receiver == null || start == null || end == null) {
-            throw new IllegalArgumentException("None of the parameters can be null");
+            logger.error("None of the parameters can be null");
+            throw new ConflictingCallsException("None of the parameters can be null");
         }
 
         if (end.isBefore(start)) {
-            throw new IllegalArgumentException("End time cannot be before start time");
+            throw new ConflictingCallsException("End time cannot be before start time");
         }
 
         return fragmentRepository.existsConflictingCalls(caller, receiver, start, end);
