@@ -1,11 +1,15 @@
 package rom.hrs.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "tariff_params")
+@Builder
+@Getter
 public class TariffParameter {
     @EmbeddedId
     private TariffParameterId id;
@@ -22,7 +26,5 @@ public class TariffParameter {
     @ManyToOne
     @JoinColumn(name = "param_id", nullable = false)
     private Parameter parameter;
-
-    // Геттеры и сеттеры
 }
 

@@ -6,8 +6,9 @@ import rom.hrs.entity.TariffInterval;
 import rom.hrs.entity.TariffIntervalId;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TariffIntervalRepository extends JpaRepository<TariffInterval, TariffIntervalId> {
-    List<TariffInterval> findByTariffId(Long tariffId);
+    Optional<TariffInterval> findByTariffId(Long tariffId);
 }

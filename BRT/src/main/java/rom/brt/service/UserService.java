@@ -8,6 +8,8 @@ import rom.brt.dto.Subscriber;
 import rom.brt.entity.User;
 import rom.brt.repository.UserRepository;
 
+import java.util.Optional;
+
 @Service
 public class UserService {
     final Logger logger = LoggerFactory.getLogger(UserService.class);
@@ -19,14 +21,14 @@ public class UserService {
     }
 
     public User findUser(String msisdn) {
-        User user = userRepository.findByMsisdn(msisdn);
-        if (user == null) {
+        Optional<User> user = userRepository.findByMsisdn(msisdn);
+        if (user.isEmpty()) {
             User emptyUser = new User();
             emptyUser.setUserId(-1);
             emptyUser.setMsisdn(msisdn);
             return emptyUser;
         }
-        return user;
+        return user.get();
     }
 
     public Subscriber createServicedSubscriberFromRecord(User user) {

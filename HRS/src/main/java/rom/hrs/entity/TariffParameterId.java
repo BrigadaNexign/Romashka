@@ -2,12 +2,16 @@ package rom.hrs.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 import java.io.Serializable;
 
 @Embeddable
 @EqualsAndHashCode
+@AllArgsConstructor
+@Getter
 public class TariffParameterId implements Serializable {
     @Column(name = "tariff_id")
     private Integer tariffId;
