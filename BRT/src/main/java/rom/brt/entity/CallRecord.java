@@ -19,7 +19,7 @@ public class CallRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "call_id")
-    private Integer callId;
+    private Long callId;
 
     @Column(name = "call_type", nullable = false, length = 2)
     private String callType;

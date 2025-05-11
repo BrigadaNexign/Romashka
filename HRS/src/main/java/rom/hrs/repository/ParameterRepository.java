@@ -11,8 +11,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
-public interface ParameterRepository extends JpaRepository<Parameter, Integer> {
+public interface ParameterRepository extends JpaRepository<Parameter, Long> {
     Optional<Parameter> findByName(String name);
-    Optional<Parameter> findById(Long id);
 }
 

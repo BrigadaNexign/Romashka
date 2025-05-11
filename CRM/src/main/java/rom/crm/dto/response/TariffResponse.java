@@ -9,6 +9,7 @@ public record TariffResponse(
         String description,
         Integer intervalDays,
         Double price,
+        Integer type,
         List<CallPriceResponse> callPrices,
         List<TariffParamResponse> params
 ) {}

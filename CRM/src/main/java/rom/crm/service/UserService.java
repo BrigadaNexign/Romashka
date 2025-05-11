@@ -1,9 +1,12 @@
 package rom.crm.service;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import rom.crm.entity.Role;
 import rom.crm.entity.User;
@@ -13,6 +16,7 @@ import rom.crm.repository.UserRepository;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Сохранение пользователя
@@ -75,17 +79,21 @@ public class UserService {
         return getByUsername(username);
     }
 
+    @PostConstruct
+    public void init() {
+        if (repository.findByUsername("Manager").isEmpty()) {
+            User manager = User.builder()
+                    .username("Manager")
+                    .email("manager.alex@company.com")
+                    .msisdn(null)
+                    .password(passwordEncoder.encode("secure_password_123"))
+                    .role(Role.MANAGER)
+                    .tariffId(null)
+                    .build();
 
-    /**
-     * Выдача прав администратора текущему пользователю
-     * <p>
-     * Нужен для демонстрации
-     */
-    @Deprecated
-    public void getAdmin() {
-        var user = getCurrentUser();
-        user.setRole(Role.ROLE_MANAGER);
-        save(user);
+            repository.save(manager);
+            System.out.println("Created manager account");
+        }
     }
 }
 

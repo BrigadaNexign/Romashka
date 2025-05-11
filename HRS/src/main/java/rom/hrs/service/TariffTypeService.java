@@ -11,7 +11,7 @@ import rom.hrs.repository.TariffTypeRepository;
 public class TariffTypeService {
     private final TariffTypeRepository typeRepository;
 
-    public String getTypeNameById(Integer id) {
+    public String getTypeNameById(Long id) {
         return typeRepository.findById(id)
                 .map(TariffType::getName)
                 .orElseThrow(() -> new EntityNotFoundException("Type not found with id: " + id));

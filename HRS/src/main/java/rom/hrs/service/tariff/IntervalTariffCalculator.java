@@ -49,7 +49,7 @@ public class IntervalTariffCalculator implements TariffCalculator {
     }
 
     List<TariffIntervalDto> getIntervalsByTariffId(Long tariffId) {
-        return tariffIntervalRepository.findByTariffId(tariffId).stream()
+        return tariffIntervalRepository.findAllByTariffId(tariffId).stream()
                 .map(TariffIntervalDto::fromEntity)
                 .toList();
     }

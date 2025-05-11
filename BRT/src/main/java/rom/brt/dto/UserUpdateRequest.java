@@ -2,14 +2,14 @@ package rom.brt.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import lombok.Data;
 
-@Data
-public class UserUpdateRequest {
-    @NotBlank
-    private String userName;
+import java.time.LocalDate;
 
-    @NotBlank
-    @Pattern(regexp = "\\d{11}", message = "MSISDN must be 11 digits")
-    private String msisdn;
-}
+public record UserUpdateRequest(
+        @NotBlank String name,
+        @NotBlank @Pattern(regexp = "^[7-8]\\d{10}$") String msisdn,
+        Long tariffId,
+        Double balance,
+        Integer minutes,
+        LocalDate paymentDay
+) { }

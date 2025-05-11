@@ -7,20 +7,16 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import rom.crm.entity.ServiceName;
 import rom.crm.entity.User;
 
 import java.security.Key;
 import java.time.Duration;
-import java.time.Instant;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
-@Component
+@Service
 public class JwtService {
 
     @Value("${token.signing.key}")
@@ -30,38 +26,42 @@ public class JwtService {
     private Duration serviceTokenTtl;
 
     /**
-     * Извлечение имени пользователя из токена
-     *
-     * @param token токен
-     * @return имя пользователя
+     * Extract username from token
      */
     public String extractUserName(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
     /**
-     * Генерация токена
-     *
-     * @param userDetails данные пользователя
-     * @return токен
+     * Extract issuer from token
+     */
+    public String extractIssuer(String token) {
+        return extractClaim(token, Claims::getIssuer);
+    }
+
+    /**
+     * Extract scope from token
+     */
+    public String extractScope(String token) {
+        return extractClaim(token, claims -> claims.get("scope", String.class));
+    }
+
+    /**
+     * Generate token for user authentication
      */
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         if (userDetails instanceof User customUserDetails) {
             claims.put("id", customUserDetails.getId());
             claims.put("email", customUserDetails.getEmail());
-            claims.put("msisdn", customUserDetails.getEmail());
-            claims.put("role", customUserDetails.getRole());
+            claims.put("msisdn", customUserDetails.getMsisdn());
+            claims.put("role", customUserDetails.getRole().name());
         }
-        return generateToken(claims, userDetails);
+        return generateToken(claims, userDetails, Duration.ofHours(24));
     }
 
     /**
-     * Проверка токена на валидность
-     *
-     * @param token       токен
-     * @param userDetails данные пользователя
-     * @return true, если токен валиден
+     * Validate token for user authentication
      */
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String userName = extractUserName(token);
@@ -69,71 +69,84 @@ public class JwtService {
     }
 
     /**
-     * Извлечение данных из токена
-     *
-     * @param token           токен
-     * @param claimsResolvers функция извлечения данных
-     * @param <T>             тип данных
-     * @return данные
+     * Validate service token with issuer and audience
      */
-    private <T> T extractClaim(String token, Function<Claims, T> claimsResolvers) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolvers.apply(claims);
+    public boolean isTokenValid(String token, String expectedIssuer, String expectedAudience) {
+        try {
+            final Claims claims = extractAllClaims(token);
+            final Date expiration = claims.getExpiration();
+
+            // Check expiration
+            boolean isNotExpired = expiration == null || expiration.after(new Date());
+
+            // Check issuer
+            String issuer = claims.getIssuer();
+            boolean isIssuerValid = issuer != null && issuer.equals(expectedIssuer);
+
+            // Check audience
+            Set<String> audiences = claims.getAudience();
+            boolean isAudienceValid = audiences != null && audiences.contains(expectedAudience);
+
+            return isNotExpired && isIssuerValid && isAudienceValid;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
-     * Генерация токена
-     *
-     * @param extraClaims дополнительные данные
-     * @param userDetails данные пользователя
-     * @return токен
+     * Generate service token
      */
-    private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
-        return Jwts.builder().setClaims(extraClaims).setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 100000 * 60 * 24))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256).compact();
-    }
-
-    public String generateServiceToken(ServiceName serviceName, String msisdn, String scope) {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtSigningKey);
-        Key key = Keys.hmacShaKeyFor(keyBytes);
-
+    public String generateServiceToken(ServiceName issuer, ServiceName audience, String scope) {
         return Jwts.builder()
-                .setHeaderParam("typ", "JWT")
-                .setIssuer(ServiceName.CRM.getCode())
-                .setAudience(serviceName.getCode())
-                .claim("msisdn", msisdn)
+                .issuer(issuer.name())
+                .audience()
+                    .add(audience.getCode())
+                    .and()
                 .claim("scope", scope)
-                .setExpiration(Date.from(Instant.now().plus(serviceTokenTtl)))
-                .signWith(key)
+                .subject("service-communication")
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .signWith(getSigningKey())
                 .compact();
     }
+
     /**
-     * Проверка токена на просроченность
-     *
-     * @param token токен
-     * @return true, если токен просрочен
+     * Extract claim from token
+     */
+    private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    /**
+     * Generate token with custom claims and expiration
+     */
+    private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails, Duration ttl) {
+        return Jwts.builder()
+                .claims(extraClaims)
+                .subject(userDetails.getUsername())
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    /**
+     * Check if token is expired
      */
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
     /**
-     * Извлечение даты истечения токена
-     *
-     * @param token токен
-     * @return дата истечения
+     * Extract expiration date from token
      */
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
     /**
-     * Извлечение всех данных из токена
-     *
-     * @param token токен
-     * @return данные
+     * Extract all claims from token
      */
     private Claims extractAllClaims(String token) {
         return Jwts.parser().setSigningKey(getSigningKey()).build().parseClaimsJws(token)
@@ -141,9 +154,7 @@ public class JwtService {
     }
 
     /**
-     * Получение ключа для подписи токена
-     *
-     * @return ключ
+     * Get signing key
      */
     private Key getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSigningKey);

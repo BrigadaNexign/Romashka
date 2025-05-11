@@ -17,7 +17,7 @@ public class TariffParamService {
     private final ParameterService parameterService;
 
     public List<TariffParamResponse> findTariffResponseByTariffId(Long tariffId) {
-        return tariffParameterRepository.findByTariffId(tariffId).stream()
+        return tariffParameterRepository.findByTariff_Id(tariffId).stream()
                 .map(tariffParameter -> {
                     try {
                         return TariffParamResponse.builder()

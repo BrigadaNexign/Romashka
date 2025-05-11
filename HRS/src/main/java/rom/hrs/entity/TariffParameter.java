@@ -1,15 +1,17 @@
 package rom.hrs.entity;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "tariff_params")
 @Builder
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class TariffParameter {
     @EmbeddedId
     private TariffParameterId id;
@@ -26,5 +28,19 @@ public class TariffParameter {
     @ManyToOne
     @JoinColumn(name = "param_id", nullable = false)
     private Parameter parameter;
+
+    @Embeddable
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class TariffParameterId implements Serializable {
+        @Column(name = "tariff_id")
+        private Long tariffId;
+
+        @Column(name = "param_id")
+        private Long paramId;
+    }
 }
 

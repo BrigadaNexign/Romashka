@@ -19,7 +19,6 @@ public class MessageHandler {
     private final FragmentMapper fragmentMapper;
     private final RequestBuilder requestBuilder;
     private final ResponseHandler responseHandler;
-    private final JwtService jwtService; // Add JwtService dependency
 
     private final Logger logger = LoggerFactory.getLogger(MessageHandler.class);
 

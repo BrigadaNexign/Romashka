@@ -3,6 +3,7 @@ package rom.hrs.service;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,14 +16,15 @@ import rom.hrs.repository.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class TariffService {
     private static final Logger logger = LoggerFactory.getLogger(TariffService.class);
     private final TariffRepository tariffRepository;
-    private final TariffTypeRepository tariffTypeRepository;
     private final SubscriberTariffRepository subscriberTariffRepository;
     private final TariffIntervalRepository tariffIntervalRepository;
     private final CallPricingRepository callPricingRepository;
@@ -37,17 +39,24 @@ public class TariffService {
                 .orElseThrow(() -> new NoTariffFoundException(tariffId));
     }
 
-    @Transactional(readOnly = true)
-    public TariffResponse getTariff(Long tariffId) {
-        logger.debug("Retrieving tariff with ID: {}", tariffId);
+    @Transactional
+    public TariffResponse findTariffResponseById(long tariffId) throws NoTariffFoundException {
         Tariff tariff = tariffRepository.findById(tariffId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tariff not found"));
-        try {
-            return mapToResponse(tariff);
-        } catch (NoIntervalsFoundException e) {
-            logger.error(e.getMessage());
-            return null;
-        }
+                .orElseThrow(() -> new NoTariffFoundException(tariffId));
+        return mapToResponseSafe(tariff);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TariffResponse> getAllTariffs(String sortBy) {
+        logger.debug("Retrieving all tariffs with sorting: {}", sortBy);
+
+        Sort sort = sortBy != null ? Sort.by(sortBy) : Sort.unsorted();
+        List<Tariff> tariffs = tariffRepository.findAll(sort);
+
+        return tariffs.stream()
+                .map(this::mapToResponseSafe)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -57,12 +66,8 @@ public class TariffService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tariff not found for MSISDN"));
         Tariff tariff = tariffRepository.findById((long) subscriberTariff.getTariffId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tariff not found"));
-        try {
-            return mapToResponse(tariff);
-        } catch (NoIntervalsFoundException e) {
-            logger.error(e.getMessage());
-            return null;
-        }
+
+        return mapToResponseSafe(tariff);
     }
 
     @Transactional
@@ -94,7 +99,7 @@ public class TariffService {
 
         // Save tariff interval
         TariffInterval interval = TariffInterval.builder()
-                .id(new TariffIntervalId(tariff.getId().intValue(), request.intervalDays()))
+                .id(new TariffIntervalId(tariff.getId(), request.intervalDays()))
                 .price(BigDecimal.valueOf(request.price()))
                 .tariff(tariff)
                 .build();
@@ -126,7 +131,7 @@ public class TariffService {
                         });
 
                 TariffParameter tariffParam = TariffParameter.builder()
-                        .id(new TariffParameterId(tariff.getId().intValue(), parameter.getId()))
+                        .id(new TariffParameter.TariffParameterId(tariff.getId(), parameter.getId()))
                         .value(BigDecimal.valueOf(param.value() != null ? param.value() : 0.0))
                         .tariff(tariff)
                         .parameter(parameter)
@@ -136,17 +141,35 @@ public class TariffService {
         }
     }
 
-    private TariffResponse mapToResponse(Tariff tariff) throws NoIntervalsFoundException {
-        Optional<TariffInterval> tariffInterval = tariffIntervalRepository.findByTariffId(tariff.getId());
+    @Transactional
+    public void deleteTariff(Long id) {
+        tariffRepository.deleteById(id);
+    }
 
-        if (tariffInterval.isEmpty()) throw new NoIntervalsFoundException(tariff.getId());
+    private TariffResponse mapToResponseSafe(Tariff tariff) {
+        try {
+            return mapToResponse(tariff);
+        } catch (NoIntervalsFoundException e) {
+            logger.warn("No intervals found for tariff ID: {}. Skipping this tariff.", tariff.getId());
+        }
+        return null;
+    }
+
+    private TariffResponse mapToResponse(Tariff tariff) throws NoIntervalsFoundException {
+        List<TariffInterval> tariffIntervalList = tariffIntervalRepository.findAllByTariffId(tariff.getId());
+
+        if (tariffIntervalList.isEmpty()) throw new NoIntervalsFoundException(tariff.getId());
+        if (tariffIntervalList.size() > 1) logger.warn("Got multiple tariff intervals, using first");
+
+        TariffInterval tariffInterval = tariffIntervalList.get(0);
 
         TariffResponse response = new TariffResponse(
                 tariff.getId(),
                 tariff.getName(),
                 tariff.getDescription(),
-                tariffInterval.get().getId().getInterval(),
-                tariffInterval.get().getPrice().doubleValue(),
+                tariffInterval.getId().getInterval(),
+                tariffInterval.getPrice().doubleValue(),
+                tariff.getType(),
                 callPricingService.findListOfDtoById(tariff.getId()),
                 tariffParamService.findTariffResponseByTariffId(tariff.getId())
         );

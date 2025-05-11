@@ -1,8 +1,6 @@
 package rom.brt.dto;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -10,6 +8,8 @@ import java.time.LocalDateTime;
 @Data
 @Getter
 @Setter
+@Builder
+@AllArgsConstructor
 public class UserResponse {
     private Long userId;
     private String userName;

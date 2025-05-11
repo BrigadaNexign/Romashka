@@ -22,7 +22,7 @@ public class ParameterService {
         return parameter.get();
     }
 
-    public Parameter findByParamId(Integer id) throws Exception {
+    public Parameter findByParamId(Long id) throws Exception {
         Optional<Parameter> parameter = parameterRepository.findById(id);
         if (parameter.isEmpty()) throw new Exception("Parameter not found"); //TODO: exception
         return parameter.get();

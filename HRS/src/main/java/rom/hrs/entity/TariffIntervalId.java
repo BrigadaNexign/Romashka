@@ -7,15 +7,14 @@ import lombok.*;
 import java.io.Serializable;
 
 @Embeddable
-@EqualsAndHashCode
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 public class TariffIntervalId implements Serializable {
     @Column(name = "tariff_id")
-    private Integer tariffId;
+    private Long tariffId;
 
     @Column(name = "interval")
     private Integer interval;

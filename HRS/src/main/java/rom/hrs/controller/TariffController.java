@@ -3,52 +3,48 @@ package rom.hrs.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import rom.hrs.dto.ChangeTariffRequest;
-import rom.hrs.dto.CreateTariffRequest;
-import rom.hrs.dto.TariffResponse;
-import rom.hrs.entity.Tariff;
+import rom.hrs.dto.*;
 import rom.hrs.exception.NoTariffFoundException;
 import rom.hrs.service.TariffService;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/tariff")
+@RequestMapping("${services.hrs.api.mappings.tariff.base}")
 @RequiredArgsConstructor
 public class TariffController {
     private final TariffService tariffService;
 
-    @GetMapping("/{tariffId}")
-    @PreAuthorize("hasAuthority('SCOPE_tariff.read')")
-    public ResponseEntity<TariffResponse> getTariff(@PathVariable Long tariffId) {
-        return ResponseEntity.ok(tariffService.getTariff(tariffId));
+    @GetMapping
+    public ResponseEntity<List<TariffResponse>> getAllTariffs(
+            @RequestParam(required = false) String sortBy) {
+        return ResponseEntity.ok(tariffService.getAllTariffs(sortBy));
     }
 
-    @GetMapping("/by-msisdn/{msisdn}")
-    @PreAuthorize("hasAuthority('SCOPE_tariff.read')")
+    @GetMapping("${services.hrs.api.mappings.tariff.by-msisdn}")
     public ResponseEntity<TariffResponse> getTariffByMsisdn(@PathVariable String msisdn) {
         return ResponseEntity.ok(tariffService.getTariffByMsisdn(msisdn));
     }
 
-    @GetMapping("/by-id/{tariffId}")
-    @PreAuthorize("hasAuthority('SCOPE_tariff.read')")
-    public ResponseEntity<Tariff> findTariffById(@PathVariable long tariffId) throws NoTariffFoundException {
-        return ResponseEntity.ok(tariffService.findTariffById(tariffId));
+    @GetMapping("${services.hrs.api.mappings.tariff.by-id}")
+    public ResponseEntity<TariffResponse> findTariffById(@PathVariable long tariffId) {
+        try {
+            return ResponseEntity.ok(tariffService.findTariffResponseById(tariffId));
+        } catch (NoTariffFoundException e) {
+            return ResponseEntity.status(404).build();
+        }
     }
 
-    @PostMapping("/change/{msisdn}")
-    @PreAuthorize("hasAuthority('SCOPE_tariff.update')")
-    public ResponseEntity<Void> changeTariff(
-            @PathVariable String msisdn,
-            @RequestBody @Valid ChangeTariffRequest request) {
-        tariffService.changeTariff(msisdn, request);
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/create")
-    @PreAuthorize("hasAuthority('SCOPE_tariff.create')")
+    @PostMapping("${services.hrs.api.mappings.tariff.create}")
     public ResponseEntity<Void> createTariff(@RequestBody @Valid CreateTariffRequest request) {
         tariffService.createTariff(request);
         return ResponseEntity.status(201).build();
+    }
+
+    @PostMapping("${services.hrs.api.mappings.tariff.delete}")
+    public ResponseEntity<Void> deleteTariff(@PathVariable long tariffId) {
+        tariffService.deleteTariff(tariffId);
+        return ResponseEntity.status(200).build();
     }
 }
