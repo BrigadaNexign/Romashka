@@ -15,7 +15,9 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
+
     Optional<User> findByMsisdn(String msisdn);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.msisdn = :msisdn")
     boolean existsByMsisdnWithLock(@Param("msisdn") String msisdn);

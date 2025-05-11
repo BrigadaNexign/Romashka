@@ -28,7 +28,7 @@ public class MessageHandler {
                 processCall(fragment);
             }
         } catch (Exception e) {
-            logger.error(e.getLocalizedMessage());
+            logger.error("Error handling message: {}", e.getMessage());
         }
     }
 
@@ -41,7 +41,7 @@ public class MessageHandler {
         Subscriber caller;
         Subscriber receiver;
 
-        if (callerRecord.getUserId().equals(-1)) {
+        if (callerRecord.getUserId().equals(-1L)) {
             logger.info("Caller is not serviced by Romashka. Terminating fragment processing");
             return;
         }
@@ -49,7 +49,7 @@ public class MessageHandler {
         caller = userService.createServicedSubscriberFromRecord(callerRecord);
         logger.debug("Created caller: {}", caller);
 
-        if (receiverRecord.getUserId().equals(-1)) {
+        if (receiverRecord.getUserId().equals(-1L)) {
             logger.debug("Receiver {} is not serviced by Romashka", receiverRecord.getMsisdn());
             receiver = userService.createForeignSubscriberFromRecord(receiverRecord);
         } else {
