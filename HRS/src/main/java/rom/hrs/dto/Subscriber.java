@@ -2,6 +2,10 @@ package rom.hrs.dto;
 
 import java.time.LocalDate;
 
+/**
+ * Представляет абонента.
+ * Может быть как обслуживаемым (с тарифом), так и внешним (без тарифа).
+ */
 public record Subscriber(
         Integer id,
         String msisdn,
@@ -20,13 +24,5 @@ public record Subscriber(
         if (id == null && isServiced) {
             throw new IllegalStateException("Subscriber without id cannot be serviced");
         }
-    }
-
-    public static Subscriber fromServicedUser(int id, String msisdn, long tariffId, int minutes, LocalDate paymentDay) {
-        return new Subscriber(id, msisdn, true, tariffId, minutes, paymentDay);
-    }
-
-    public static Subscriber fromForeignUser(String msisdn) {
-        return new Subscriber(null, msisdn, false, null, null, null);
     }
 }

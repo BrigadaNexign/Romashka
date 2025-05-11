@@ -5,6 +5,9 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * DTO для ответа с информацией о параметре тарифа.
+ */
 @Data
 @Getter
 @Setter

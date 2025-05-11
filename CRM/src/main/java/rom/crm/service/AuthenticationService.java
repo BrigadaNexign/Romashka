@@ -8,9 +8,12 @@ import org.springframework.stereotype.Service;
 import rom.crm.dto.auth.JwtAuthenticationResponse;
 import rom.crm.dto.auth.SignInRequest;
 import rom.crm.dto.auth.SignUpRequest;
-import rom.crm.entity.Role;
 import rom.crm.entity.User;
 
+/**
+ * Сервис аутентификации и регистрации пользователей.
+ * Обеспечивает процессы входа в систему и регистрации новых пользователей.
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {

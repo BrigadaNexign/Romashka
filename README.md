@@ -27,6 +27,13 @@ docker-compose down
 
 ## CRM
 
+## Base URL
+```http://localhost:8083```
+
+## SwaggerUI
+
+```http://localhost:8083/swagger-ui/index.html#/```
+
 ## Эндпоинты аутентификации
 
 #### Возвращают JWT-токен
@@ -66,9 +73,6 @@ POST /api/auth/sign-in
 Валидация:
 - Имя пользователя: обязательно, не пустое
 - Пароль: обязательно, 8-255 символов
-
-## Base URL
-```http://localhost:8083```
 
 ## Authentication
 Все запросы требуют JWT токена с ролю MANAGER / SUBSCRIBER в заголовке:

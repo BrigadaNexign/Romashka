@@ -12,10 +12,19 @@ import rom.hrs.exception.IncompleteResponseException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Билдер для формирования ответов расчета.
+ */
 @Component
 public class ResponseBuilder {
     private static final Logger logger = LoggerFactory.getLogger(ResponseBuilder.class);
 
+    /**
+     * Инициализирует базовый ответ для расчета.
+     * @param request данные запроса
+     * @param tariff тариф абонента
+     * @return инициализированный ответ
+     */
     public CalculationResponse initResponse(CalculationRequest request, Tariff tariff) {
         return new CalculationResponse(
                 false,
@@ -29,6 +38,10 @@ public class ResponseBuilder {
         );
     }
 
+    /**
+     * Дозаполняет поля ответа
+     * @return ответ с ошибкой
+     */
     public CalculationResponse fillDefaultFields(CalculationRequest request, Tariff tariff, CalculationResponse response) {
         logger.debug("Filling default fields for response: {}", response);
 
@@ -45,6 +58,10 @@ public class ResponseBuilder {
         return response;
     }
 
+    /**
+     * Создает ответ с ошибкой.
+     * @return ответ с ошибкой
+     */
     public CalculationResponse createErrorResponse(Exception exception) {
         CalculationResponse response = new CalculationResponse();
 
@@ -61,6 +78,9 @@ public class ResponseBuilder {
         return response;
     }
 
+    /**
+     * Валидация ответа
+     */
     public void validateSuccessfulResponse(CalculationResponse response, String... requiredFields)
             throws IncompleteResponseException {
 

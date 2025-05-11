@@ -8,10 +8,25 @@ import rom.cdr.exception.EmptyFieldException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Сервис для создания и валидации фрагментов звонков (CDR записей).
+ * Обеспечивает базовую проверку целостности данных перед созданием записей.
+ */
 @Service
 @RequiredArgsConstructor
 public class FragmentEditor {
 
+    /**
+     * Создает новый фрагмент звонка с базовой валидацией.
+     *
+     * @param callType тип вызова ("01" - исходящий, "02" - входящий)
+     * @param callerMsisdn номер вызывающего абонента
+     * @param receiverMsisdn номер принимающего абонента
+     * @param startTime время начала звонка
+     * @param endTime время окончания звонка
+     * @return новый объект Fragment
+     * @throws IllegalArgumentException если время окончания раньше времени начала
+     */
     public Fragment createFragment(
             String callType,
             String callerMsisdn,
@@ -32,6 +47,12 @@ public class FragmentEditor {
         return fragment;
     }
 
+    /**
+     * Форматирует фрагмент звонка в массив строк для экспорта.
+     *
+     * @param fragment фрагмент для форматирования
+     * @return массив строк в формате [callType, callerMsisdn, receiverMsisdn, startTime, endTime]
+     */
     public String[] formatFragment(Fragment fragment) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
         return new String[]{
@@ -43,6 +64,12 @@ public class FragmentEditor {
         };
     }
 
+    /**
+     * Проверяет фрагмент на наличие обязательных полей.
+     *
+     * @param fragment фрагмент для проверки
+     * @throws EmptyFieldException если отсутствуют обязательные поля
+     */
     public void checkFragment(Fragment fragment) throws EmptyFieldException {
         if (fragment == null) {
             throw new EmptyFieldException("Fragment is null");

@@ -3,13 +3,14 @@ package rom.hrs.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import rom.hrs.dto.TariffParamResponse;
-import rom.hrs.entity.Parameter;
-import rom.hrs.entity.TariffParameter;
 import rom.hrs.repository.TariffParameterRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Сервис для работы с параметрами тарифов.
+ */
 @Service
 @RequiredArgsConstructor
 public class TariffParamService {

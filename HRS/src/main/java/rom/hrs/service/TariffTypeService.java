@@ -6,6 +6,9 @@ import org.springframework.stereotype.Service;
 import rom.hrs.entity.TariffType;
 import rom.hrs.repository.TariffTypeRepository;
 
+/**
+ * Сервис для работы с типами тарифов.
+ */
 @Service
 @RequiredArgsConstructor
 public class TariffTypeService {

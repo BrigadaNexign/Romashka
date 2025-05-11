@@ -10,14 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import rom.crm.dto.request.BalanceUpdate;
-import rom.crm.dto.response.SubscriberInfoResponse;
-import rom.crm.dto.response.TariffResponse;
-import rom.crm.dto.response.UserResponse;
 import rom.crm.entity.User;
-import rom.crm.exception.ExternalServiceException;
-import rom.crm.exception.TariffNotFoundException;
 import rom.crm.service.BrtProxyService;
-import rom.crm.service.HrsProxyService;
 
 /**
  * Контроллер для операций абонентов

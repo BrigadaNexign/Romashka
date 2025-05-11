@@ -2,6 +2,9 @@ package rom.crm.exception;
 
 import lombok.Getter;
 
+/**
+ * Исключение при отсутствии запрошенного тарифного плана.
+ */
 @Getter
 public class TariffNotFoundException extends BusinessException {
     private final ErrorCode errorCode;

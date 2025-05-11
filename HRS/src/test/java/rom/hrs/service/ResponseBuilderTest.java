@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.slf4j.Logger;
 import rom.hrs.dto.CalculationRequest;
 import rom.hrs.dto.CalculationResponse;
 import rom.hrs.dto.Subscriber;

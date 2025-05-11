@@ -17,9 +17,12 @@ import rom.hrs.repository.*;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Сервис для работы с тарифами.
+ * Предоставляет CRUD операции и методы поиска тарифов.
+ */
 @Service
 @RequiredArgsConstructor
 public class TariffService {
@@ -71,20 +74,6 @@ public class TariffService {
     }
 
     @Transactional
-    public void changeTariff(String msisdn, ChangeTariffRequest request) {
-        logger.debug("Changing tariff for MSISDN: {} to tariff ID: {}", msisdn, request.tariffId());
-        tariffRepository.findById(request.tariffId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tariff not found"));
-
-        SubscriberTariff subscriberTariff = subscriberTariffRepository.findByMsisdn(msisdn)
-                .orElseGet(() -> SubscriberTariff.builder()
-                        .msisdn(msisdn)
-                        .build());
-        subscriberTariff.setTariffId(request.tariffId().intValue());
-        subscriberTariffRepository.save(subscriberTariff);
-    }
-
-    @Transactional
     public void createTariff(CreateTariffRequest request) {
         logger.debug("Creating new tariff with name: {}", request.name());
         if (tariffRepository.findByName(request.name()).isEmpty()) {
@@ -97,7 +86,6 @@ public class TariffService {
                 .build();
         tariff = tariffRepository.save(tariff);
 
-        // Save tariff interval
         TariffInterval interval = TariffInterval.builder()
                 .id(new TariffIntervalId(tariff.getId(), request.intervalDays()))
                 .price(BigDecimal.valueOf(request.price()))
@@ -105,7 +93,6 @@ public class TariffService {
                 .build();
         tariffIntervalRepository.save(interval);
 
-        // Save call pricing
         if (request.callPrices() != null) {
             for (CallPriceDto callPrice : request.callPrices()) {
                 CallPricing pricing = CallPricing.builder()
@@ -117,7 +104,6 @@ public class TariffService {
             }
         }
 
-        // Save tariff parameters
         if (request.params() != null) {
             for (TariffParamDto param : request.params()) {
                 Parameter parameter = parameterRepository.findByName(param.name())
@@ -163,7 +149,7 @@ public class TariffService {
 
         TariffInterval tariffInterval = tariffIntervalList.get(0);
 
-        TariffResponse response = new TariffResponse(
+        return new TariffResponse(
                 tariff.getId(),
                 tariff.getName(),
                 tariff.getDescription(),
@@ -173,6 +159,5 @@ public class TariffService {
                 callPricingService.findListOfDtoById(tariff.getId()),
                 tariffParamService.findTariffResponseByTariffId(tariff.getId())
         );
-        return response;
     }
 }

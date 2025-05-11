@@ -6,8 +6,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
 
 /**
- * Основной класс приложения, который запускает Spring Boot приложение.
- * Использует аннотацию {@link SpringBootApplication} для автоматической настройки и запуска приложения.
+ * Основной класс Spring Boot приложения для генерации CDR.
+ *
  */
 @SpringBootApplication
 @ComponentScan
@@ -15,8 +15,6 @@ import org.springframework.context.annotation.PropertySource;
 public class Application {
     /**
      * Точка входа в приложение.
-     *
-     * @param args аргументы командной строки, переданные при запуске приложения
      */
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);

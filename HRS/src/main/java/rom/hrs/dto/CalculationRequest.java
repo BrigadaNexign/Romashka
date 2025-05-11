@@ -6,6 +6,9 @@ import rom.hrs.exception.InvalidCallTypeException;
 
 import java.time.LocalDate;
 
+/**
+ * Запрос на расчет стоимости звонка.
+ */
 @Data
 @Getter
 @Setter
