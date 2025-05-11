@@ -7,18 +7,29 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * Конфигурация безопасности приложения.
+ * Отключает CSRF и CORS защиту, разрешает все запросы без аутентификации.
+ */
 @Configuration
 public class SecurityConfig {
+    /**
+     * Настраивает цепочку фильтров безопасности.
+     *
+     * @param http объект для настройки безопасности
+     * @return сконфигурированная цепочка фильтров
+     * @throws Exception при ошибках конфигурации
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(AbstractHttpConfigurer::disable)  // Also disable CORS if not needed
+                .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/**").permitAll()  // Temporarily allow all requests to diagnose
+                        .requestMatchers("/**").permitAll()
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // No sessions needed for API
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
         return http.build();

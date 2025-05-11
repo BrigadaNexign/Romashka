@@ -6,6 +6,10 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * Сущность абонента телефонной сети.
+ * Хранит основную информацию о пользователе и его параметры.
+ */
 @Entity
 @Table(name = "users_saved")
 @Getter

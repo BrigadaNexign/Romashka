@@ -13,6 +13,10 @@ import rom.brt.dto.UserUpdateRequest;
 import rom.brt.exception.UserNotFoundException;
 import rom.brt.service.UserService;
 
+/**
+ * Контроллер для управления пользователями (абонентами) системы.
+ * Обрабатывает HTTP-запросы, связанные с операциями над пользователями.
+ */
 @RestController
 @RequestMapping("${services.brt.api.mappings.user.base}")
 @RequiredArgsConstructor
@@ -21,6 +25,12 @@ public class UserController {
     private final Logger logger = LoggerFactory.getLogger(UserController.class);
     private final UserService userService;
 
+    /**
+     * Получает информацию о пользователе по номеру телефона (MSISDN).
+     *
+     * @param msisdn Номер телефона пользователя в формате строки
+     * @return ResponseEntity с данными пользователя или ошибкой 400 если пользователь не найден
+     */
     @GetMapping("${services.brt.api.mappings.user.get}")
     public ResponseEntity<UserResponse> getUserByMsisdn(
             @PathVariable String msisdn
@@ -33,9 +43,14 @@ public class UserController {
             logError(e);
             return ResponseEntity.badRequest().build();
         }
-
     }
 
+    /**
+     * Создает нового пользователя в системе.
+     *
+     * @param request DTO с данными для создания пользователя
+     * @return ResponseEntity с кодом 200 при успешном создании
+     */
     @PostMapping("${services.brt.api.mappings.user.create}")
     public ResponseEntity<Void> createUser(
             @RequestBody @Valid UserUpdateRequest request
@@ -45,6 +60,13 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * Пополняет баланс пользователя.
+     *
+     * @param msisdn Номер телефона пользователя
+     * @param dto DTO с суммой пополнения
+     * @return ResponseEntity с кодом 200 при успехе или 400 если пользователь не найден
+     */
     @PostMapping("${services.brt.api.mappings.top-up}")
     public ResponseEntity<Void> topUpBalance(
             @PathVariable String msisdn,
@@ -60,6 +82,13 @@ public class UserController {
         }
     }
 
+    /**
+     * Изменяет тарифный план пользователя.
+     *
+     * @param msisdn Номер телефона пользователя
+     * @param request DTO с ID нового тарифа
+     * @return ResponseEntity с кодом 200 при успехе или 400 если пользователь не найден
+     */
     @PostMapping("${services.brt.api.mappings.tariff.change}")
     public ResponseEntity<Void> changeUserTariff(
             @PathVariable String msisdn,

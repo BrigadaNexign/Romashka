@@ -11,6 +11,10 @@ import rom.brt.entity.User;
 import rom.brt.exception.BusinessException;
 import rom.brt.exception.FailedResponseException;
 
+/**
+ * Обработчик сообщений с CDR-данными.
+ * Координирует процесс обработки информации о звонках.
+ */
 @Service
 @RequiredArgsConstructor
 public class MessageHandler {
@@ -22,6 +26,11 @@ public class MessageHandler {
 
     private final Logger logger = LoggerFactory.getLogger(MessageHandler.class);
 
+    /**
+     * Обрабатывает сообщение с CDR-данными.
+     *
+     * @param message CDR в формате CSV
+     */
     public void handleMessage(String message) {
         try {
             for (Fragment fragment : fragmentMapper.parseCsv(message)) {
@@ -32,6 +41,12 @@ public class MessageHandler {
         }
     }
 
+    /**
+     * Обрабатывает отдельный фрагмент CDR.
+     *
+     * @param fragment данные о звонке
+     * @throws BusinessException при ошибках обработки
+     */
     public void processCall(Fragment fragment) throws BusinessException {
         User callerRecord = userService.findUser(fragment.getCallerMsisdn());
         logger.debug("Got callerRecord: {}", callerRecord);

@@ -5,6 +5,10 @@ import com.opencsv.bean.CsvDate;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+/**
+ * Класс для представления фрагмента CDR (Call Detail Record).
+ * Содержит информацию о звонке и поддерживает десериализацию в CSV.
+ */
 @Data
 public class Fragment {
     /**
@@ -29,6 +33,10 @@ public class Fragment {
     @CsvDate(value = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime endTime;
 
+    /**
+     * Валидирует поля фрагмента.
+     * @throws IllegalArgumentException если данные невалидны
+     */
     public void validate() {
         if (!"01".equals(callType) && !"02".equals(callType)) {
             throw new IllegalArgumentException("Invalid call type: " + callType);

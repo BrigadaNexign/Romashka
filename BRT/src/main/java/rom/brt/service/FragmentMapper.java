@@ -9,6 +9,9 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
 
+/**
+ * Компонент для преобразования CSV-данных в список фрагментов CDR.
+ */
 @Component
 public class FragmentMapper {
     public List<Fragment> parseCsv(String csvContent) throws CsvParsingException {
