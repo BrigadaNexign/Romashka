@@ -2,9 +2,11 @@ package rom.crm.dto.request;
 
 import jakarta.validation.constraints.*;
 
-import java.util.List;
-
-// Запрос на смену тарифа
+/**
+ * DTO для запроса смены тарифного плана абонента.
+ *
+ * @param tariffId ID нового тарифного плана (не может быть null)
+ */
 public record ChangeTariffRequest(
         @NotNull Long tariffId
 ) {}

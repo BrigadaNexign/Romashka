@@ -4,6 +4,9 @@ import jakarta.validation.constraints.Positive;
 import lombok.*;
 import org.antlr.v4.runtime.misc.NotNull;
 
+/**
+ * DTO для цены звонка определенного типа.
+ */
 @Data
 @Setter
 @Getter

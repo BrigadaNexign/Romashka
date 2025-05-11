@@ -3,14 +3,15 @@ package rom.crm.controller;
 import jakarta.validation.Valid;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import rom.crm.dto.request.CreateTariffRequest;
 import rom.crm.dto.response.TariffResponse;
 
 import java.util.List;
 
-
+/**
+ * Feign клиент для взаимодействия с HRS сервисом.
+ */
 @FeignClient(
         name = "hrs",
         url = "${services.hrs.url}" + "${services.hrs.api.mappings.tariff.base}"

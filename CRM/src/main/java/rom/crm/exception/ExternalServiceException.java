@@ -2,6 +2,9 @@ package rom.crm.exception;
 
 import lombok.Getter;
 
+/**
+ * Исключение при ошибках взаимодействия с внешними сервисами.
+ */
 @Getter
 public class ExternalServiceException extends BusinessException {
     private final ErrorCode errorCode;

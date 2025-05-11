@@ -3,6 +3,9 @@ package rom.cdr.exception;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/**
+ * Перечисление кодов ошибок генерации CDR.
+ */
 @Getter
 @AllArgsConstructor
 public enum ErrorCode {

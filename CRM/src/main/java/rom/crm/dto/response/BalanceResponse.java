@@ -1,7 +1,11 @@
 package rom.crm.dto.response;
 
-// Ответ с информацией о балансе
-public record BalanceResponse(
+/**
+ * DTO для ответа с информацией о балансе.
+ *
+ * @param msisdn Номер телефона абонента
+ * @param amount Текущий баланс
+ */public record BalanceResponse(
         String msisdn,
         Double amount
 ) {}

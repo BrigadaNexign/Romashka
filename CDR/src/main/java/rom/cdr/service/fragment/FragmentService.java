@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 
 /**
- * Реализация сервиса для работы с Fragment.
- * Предоставляет методы для сохранения, поиска, удаления и инициализации данных Fragment.
+ * Сервис для работы с фрагментами звонков в базе данных.
+ * Обеспечивает сохранение и проверку фрагментов на конфликты.
  */
 @Service
 @AllArgsConstructor
@@ -23,6 +23,12 @@ public class FragmentService {
     private final FragmentRepository fragmentRepository;
 
 
+    /**
+     * Сохраняет фрагмент звонка в базу данных.
+     *
+     * @param fragment фрагмент для сохранения
+     * @return сохраненный фрагмент
+     */
     public Fragment saveFragment(Fragment fragment) {
         try {
             logger.debug("Saving fragment: {}", fragment);
@@ -35,6 +41,16 @@ public class FragmentService {
         }
     }
 
+    /**
+     * Проверяет наличие конфликтующих звонков для указанных параметров.
+     *
+     * @param caller номер вызывающего абонента
+     * @param receiver номер принимающего абонента
+     * @param start время начала проверяемого периода
+     * @param end время окончания проверяемого периода
+     * @return true если есть конфликтующие звонки, false если нет
+     * @throws ConflictingCallsException если параметры невалидны
+     */
     public boolean hasConflictingCalls(
             String caller,
             String receiver,

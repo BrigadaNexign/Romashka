@@ -1,6 +1,5 @@
 package rom.brt.service;
 
-import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +23,13 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserParameterRepository userParameterRepository;
 
+    /**
+     * Находит пользователя по номеру телефона.
+     * Возвращает пользователя с userId = -1 если не найден - не обслуживается.
+     *
+     * @param msisdn номер телефона для поиска
+     * @return найденный пользователь или пустая запись с userId = -1
+     */
     public User findUser(String msisdn) {
         Optional<User> user = userRepository.findByMsisdn(msisdn);
         if (user.isEmpty()) {
@@ -35,6 +41,12 @@ public class UserService {
         return user.get();
     }
 
+    /**
+     * Создает обслуживаемого абонента из данных пользователя.
+     *
+     * @param user сущность пользователя
+     * @return DTO абонента или null при ошибке
+     */
     public Subscriber createServicedSubscriberFromRecord(User user) {
         try{
             return Subscriber.fromServicedUser(
@@ -67,6 +79,13 @@ public class UserService {
         return mapToUserResponse(user);
     }
 
+    /**
+     * Пополняет баланс пользователя.
+     *
+     * @param msisdn номер телефона пользователя
+     * @param dto DTO с суммой пополнения
+     * @throws UserNotFoundException если пользователь не найден
+     */
     @Transactional
     public void topUpBalance(String msisdn, BalanceUpdate dto) throws UserNotFoundException {
         User user = userRepository.findByMsisdn(msisdn)
@@ -76,9 +95,19 @@ public class UserService {
         logSuccess();
     }
 
+    /**
+     * Создает или обновляет пользователя.
+     * При создании также инициализирует параметры пользователя.
+     *
+     * @param request DTO с данными пользователя
+     */
+
     @Transactional
     public void createUser(UserUpdateRequest request) {
         logger.info("Creating user for request: {}", request);
+
+        int minutes = request.minutes() != null ? request.minutes() : 0;
+
         User user = userRepository.findByMsisdn(request.msisdn())
                 .map(existing -> {
                     existing.setUserName(request.name());
@@ -96,8 +125,8 @@ public class UserService {
                             .build();
 
                     UserParams params = UserParams.builder()
-                            .user(newUser)  // Устанавливаем связь
-                            .minutes(request.minutes() != null ? request.minutes() : 0)
+                            .user(newUser)
+                            .minutes(minutes)
                             .paymentDay(request.paymentDay())
                             .build();
 
@@ -105,20 +134,20 @@ public class UserService {
                     return userRepository.save(newUser);
                 });
 
+        UserParams params;
         if (user.getUserParams() == null) {
-            UserParams params = UserParams.builder()
+            params = UserParams.builder()
                     .user(user)
-                    .minutes(request.minutes() != null ? request.minutes() : 0)
+                    .minutes(minutes)
                     .paymentDay(request.paymentDay())
                     .build();
             user.setUserParams(params);
-            userParameterRepository.save(params);  // Явное сохранение
         } else {
-            UserParams params = user.getUserParams();
-            params.setMinutes(request.minutes() != null ? request.minutes() : 0);
+            params = user.getUserParams();
+            params.setMinutes(minutes);
             params.setPaymentDay(request.paymentDay());
-            userParameterRepository.save(params);// Явное сохранение
         }
+        userParameterRepository.save(params);
     }
 
     @Transactional

@@ -27,11 +27,20 @@ docker-compose down
 
 ## CRM
 
+## Base URL
+```http://localhost:8083```
+
+## SwaggerUI
+
+```http://localhost:8083/swagger-ui/index.html#/```
+
 ## Эндпоинты аутентификации
+
+#### Возвращают JWT-токен
 
 ### Регистрация пользователя
 ```
-POST /api/auth/signup
+POST /api/auth/sign-up
 ```
 Тело запроса (SignUpRequest):
 ```json
@@ -52,7 +61,7 @@ POST /api/auth/signup
 
 ### Авторизация
 ```
-POST /api/auth/signin
+POST /api/auth/sign-in
 ```
 Тело запроса (SignInRequest):
 ```json
@@ -65,37 +74,99 @@ POST /api/auth/signin
 - Имя пользователя: обязательно, не пустое
 - Пароль: обязательно, 8-255 символов
 
-## Эндпоинты управления тарифами
+## Authentication
+Все запросы требуют JWT токена с ролю MANAGER / SUBSCRIBER в заголовке:
+```
+Authorization: Bearer <token>
+```
 
-### Создание нового тарифа
+## Manager Endpoints
+
+### 1. Управление абонентами
+
+#### Создать абонента
 ```
-POST /api/manager/tariffs
+POST /api/manager/subscriber/create
 ```
-Тело запроса (CreateTariffRequest):
+Тело запроса:
 ```json
 {
-  "name": "String",
-  "description": "String",
-  "intervalDays": 30,
-  "price": 300.0,
-  "callPrices": [
-    {
-      "callType": 1,
-      "pricePerMinute": 1.5
-    }
-  ],
-  "params": [
-    {
-      "name": "String",
-      "description": "String",
-      "value": 100.0,
-      "units": "minutes"
-    }
-  ]
+  "name": "string",
+  "msisdn": "79991234567",
+  "tariffId": 11,
+  "balance": 100.0,
+  "minutes": 100,
+  "paymentDay": "2025-01-01"
 }
 ```
-Валидация:
-- Название: обязательно, не пустое
-- Интервал дней: обязательно, положительное число
-- Цена: обязательно, положительное число
-- Цены звонков: для каждого типа обязательно указание цены
+Обязательные поля:
+- `name` - имя абонента
+- `msisdn` - номер телефона (11 цифр, начинается с 7 или 8)
+- `tariffId` - ID тарифного плана
+
+Опциональные поля:
+- `balance` - начальный баланс (по умолчанию: 100.0)
+- `minutes` - доступные минуты (по умолчанию: 0)
+- `paymentDay` - дата следующего платежа (по умолчанию: текущая дата + 1 месяц)
+
+#### Пополнить баланс
+```
+POST /api/manager/subscriber/{msisdn}/balance/top-up
+```
+Тело запроса:
+```json
+{
+  "amount": 100.0
+}
+```
+
+#### Сменить тариф
+```
+POST /api/manager/subscriber/{msisdn}/tariff/change-tariff
+```
+Тело запроса:
+```json
+{
+  "tariffId": 12
+}
+```
+
+#### Получить информацию об абоненте
+```
+GET /api/manager/subscriber/{msisdn}
+```
+
+### 2. Управление тарифами
+
+#### Получить детали тарифа
+```
+GET /api/manager/tariffs/{tariffId}
+```
+
+#### Получить все тарифы
+```
+GET /api/manager/tariffs?sortBy=name
+```
+
+## Subscriber Endpoints
+
+### Пополнить баланс
+```
+POST /api/user/subscriber/balance/top-up
+```
+Тело запроса:
+```json
+{
+  "msisdn": "79991234567",
+  "amount": 100.0
+}
+```
+
+## Ответы на ошибки
+
+| Код | Описание |
+|-----|----------|
+| 400 | Невалидные входные данные |
+| 403 | Доступ запрещен |
+| 404 | Ресурс не найден |
+| 500 | Внутренняя ошибка сервера |

@@ -7,6 +7,9 @@ import rom.hrs.entity.TariffInterval;
 
 import java.math.BigDecimal;
 
+/**
+ * DTO для интервала тарифа. Содержит интервал в днях и цену.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

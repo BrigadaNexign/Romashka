@@ -6,6 +6,10 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * Сущность для хранения информации о телефонных звонках.
+ * Содержит детали вызовов и их стоимость для HRS.
+ */
 @Entity
 @Table(name = "call_records")
 @Getter

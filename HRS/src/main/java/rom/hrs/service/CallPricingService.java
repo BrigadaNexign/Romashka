@@ -17,12 +17,23 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Сервис для работы с ценами звонков.
+ * Определяет стоимость звонков по типам вызовов.
+ */
 @Service
 @RequiredArgsConstructor
 public class CallPricingService {
     private static final Logger logger = LoggerFactory.getLogger(CallPricingService.class);
     private final CallPricingRepository callPricingRepository;
 
+    /**
+     * Применяет стоимость звонка к расчету.
+     * @param request данные запроса
+     * @param tariff тариф абонента
+     * @param response объект ответа для обновления
+     * @throws BusinessException при ошибках расчета
+     */
     public void applyCallPricing(CalculationRequest request, Tariff tariff, CalculationResponse response)
             throws BusinessException {
 

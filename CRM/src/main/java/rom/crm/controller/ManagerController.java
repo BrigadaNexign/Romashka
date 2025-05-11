@@ -1,5 +1,9 @@
 package rom.crm.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -19,14 +23,24 @@ import rom.crm.service.BrtProxyService;
 import rom.crm.service.HrsProxyService;
 import java.util.List;
 
+
+/**
+ * Контроллер для управления абонентами и тарифами (для менеджеров)
+ */
 @RestController
 @RequestMapping("/api/manager")
 @RequiredArgsConstructor
+@Tag(name = "Manager Operations", description = "API для управления абонентами и тарифами")
 public class ManagerController {
 
     private final HrsProxyService hrsProxyService;
     private final BrtProxyService brtProxyService;
 
+    @Operation(summary = "Создать абонента", description = "Создает нового абонента с указанным тарифом")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Абонент успешно создан"),
+            @ApiResponse(responseCode = "400", description = "Невалидные входные данные")
+    })
     @PostMapping("/subscriber/create")
     public ResponseEntity<Void> createSubscriber(@RequestBody @Valid UserUpdateRequest request) {
         try {
@@ -38,6 +52,11 @@ public class ManagerController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "Пополнить баланс абоненту", description = "Пополняет баланс указанного абонента")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Баланс успешно пополнен"),
+            @ApiResponse(responseCode = "404", description = "Абонент не найден")
+    })
     @PostMapping("/subscriber/{msisdn}/balance/top-up")
     public ResponseEntity<Void> topUpBalanceForSubscriber(
             @PathVariable @NotNull @NotEmpty String msisdn,
@@ -47,7 +66,12 @@ public class ManagerController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("subscriber/{msisdn}/tariff/change-tariff")
+    @Operation(summary = "Сменить тариф абоненту", description = "Изменяет тарифный план абонента")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Тариф успешно изменен"),
+            @ApiResponse(responseCode = "404", description = "Абонент или тариф не найден")
+    })
+    @PostMapping("/subscriber/{msisdn}/tariff/change-tariff")
     public ResponseEntity<Void> changeSubscriberTariff(
             @PathVariable @NotNull @NotEmpty String msisdn,
             @RequestBody @Valid ChangeTariffRequest request
@@ -56,6 +80,11 @@ public class ManagerController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "Получить информацию об абоненте", description = "Возвращает полную информацию об абоненте")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Информация об абоненте"),
+            @ApiResponse(responseCode = "404", description = "Абонент не найден")
+    })
     @GetMapping("/subscriber/{msisdn}")
     public ResponseEntity<SubscriberInfoResponse> getSubscriberInfo(@PathVariable String msisdn) {
         UserResponse user = brtProxyService.getUserByMsisdn(msisdn);
@@ -67,6 +96,11 @@ public class ManagerController {
         }
     }
 
+    @Operation(summary = "Получить детали тарифа", description = "Возвращает информацию о конкретном тарифе")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Информация о тарифе"),
+            @ApiResponse(responseCode = "404", description = "Тариф не найден")
+    })
     @GetMapping("/tariffs/{tariffId}")
     public ResponseEntity<TariffResponse> getTariffDetails(@PathVariable long tariffId) {
         try {
@@ -78,6 +112,11 @@ public class ManagerController {
         }
     }
 
+    @Operation(summary = "Получить все тарифы", description = "Возвращает список доступных тарифов")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Список тарифов"),
+            @ApiResponse(responseCode = "500", description = "Ошибка сервера")
+    })
     @GetMapping("/tariffs")
     public ResponseEntity<List<TariffResponse>> getAllAvailableTariffs(
             @RequestParam(required = false) String sortBy

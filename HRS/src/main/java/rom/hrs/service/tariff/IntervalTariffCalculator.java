@@ -1,8 +1,8 @@
 package rom.hrs.service.tariff;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import rom.hrs.dto.CalculationRequest;
 import rom.hrs.dto.CalculationResponse;
@@ -13,16 +13,15 @@ import rom.hrs.repository.TariffIntervalRepository;
 
 import java.util.List;
 
+/**
+ * Калькулятор интервального тарифа.
+ * Рассчитывает стоимость по фиксированным интервальным платежам.
+ */
 @Component
+@RequiredArgsConstructor
 public class IntervalTariffCalculator implements TariffCalculator {
     private static final Logger logger = LoggerFactory.getLogger(IntervalTariffCalculator.class);
-
     private final TariffIntervalRepository tariffIntervalRepository;
-
-    @Autowired
-    public IntervalTariffCalculator(TariffIntervalRepository tariffIntervalRepository) {
-        this.tariffIntervalRepository = tariffIntervalRepository;
-    }
 
     @Override
     public CalculationResponse calculate(CalculationRequest request, Tariff tariff, CalculationResponse response)
@@ -44,16 +43,22 @@ public class IntervalTariffCalculator implements TariffCalculator {
         return response;
     }
 
+    /**
+     * Проверяет, наступил ли срок платежа.
+     */
     public boolean isIntervalPaymentDue(CalculationRequest request) {
         return request.getCaller().paymentDay().isBefore(request.getCurrentDate());
     }
 
-    List<TariffIntervalDto> getIntervalsByTariffId(Long tariffId) {
+    public List<TariffIntervalDto> getIntervalsByTariffId(Long tariffId) {
         return tariffIntervalRepository.findAllByTariffId(tariffId).stream()
                 .map(TariffIntervalDto::fromEntity)
                 .toList();
     }
 
+    /**
+     * Применяет интервальный платеж к расчету.
+     */
     private void applyIntervalFee(CalculationRequest request, TariffIntervalDto interval, CalculationResponse response) {
         response.setNextPaymentDate(request.getCaller().paymentDay().plusDays(interval.getInterval()));
         double currentCost = response.getCost() != null ? response.getCost() : 0.0;

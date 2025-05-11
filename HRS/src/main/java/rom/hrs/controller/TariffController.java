@@ -10,6 +10,9 @@ import rom.hrs.service.TariffService;
 
 import java.util.List;
 
+/**
+ * Контроллер для управления тарифами.
+ */
 @RestController
 @RequestMapping("${services.hrs.api.mappings.tariff.base}")
 @RequiredArgsConstructor

@@ -2,8 +2,18 @@ package rom.crm.dto.response;
 
 import java.time.LocalDateTime;
 
-// Ответ с информацией о пользователе
-public record UserResponse(
+/**
+ * DTO для ответа с информацией о пользователе.
+ *
+ * @param id ID пользователя
+ * @param name Имя пользователя
+ * @param msisdn Номер телефона
+ * @param tariffId ID текущего тарифа
+ * @param balance Текущий баланс
+ * @param minutesRemaining Оставшиеся минуты
+ * @param regDate Дата регистрации
+ * @param nextPay Дата следующего платежа
+ */public record UserResponse(
         Long id,
         String name,
         String msisdn,

@@ -11,6 +11,9 @@ import rom.hrs.dto.CalculationRequest;
 import rom.hrs.dto.CalculationResponse;
 import rom.hrs.service.CalculationService;
 
+/**
+ * Контроллер для обработки запросов расчета стоимости.
+ */
 @RestController
 @RequiredArgsConstructor
 public class HrsController {

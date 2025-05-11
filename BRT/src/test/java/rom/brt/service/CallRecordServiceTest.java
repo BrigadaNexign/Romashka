@@ -31,7 +31,6 @@ class CallRecordServiceTest {
 
     @Test
     void saveCallRecord_shouldSaveRecordWithCorrectData() {
-        // Given
         Fragment fragment = createTestFragment();
         CalculationResponse response = createTestResponse(15.5);
 
@@ -47,10 +46,8 @@ class CallRecordServiceTest {
 
         when(callRecordRepository.save(any(CallRecord.class))).thenReturn(expectedRecord);
 
-        // When
         CallRecord result = callRecordService.saveCallRecord(fragment, response);
 
-        // Then
         assertNotNull(result);
         assertEquals("01", result.getCallType());
         assertEquals("79001112233", result.getCallerMsisdn());

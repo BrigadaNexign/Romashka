@@ -5,6 +5,10 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+/**
+ * Дополнительные параметры пользователя.
+ * Связана one-to-one с сущностью User.
+ */
 @Entity
 @Table(name = "user_params")
 @Getter

@@ -14,17 +14,13 @@ import rom.hrs.dto.CalculationResponse;
 import rom.hrs.dto.Subscriber;
 import rom.hrs.entity.Tariff;
 import rom.hrs.exception.BusinessException;
-import rom.hrs.exception.IncompleteResponseException;
 import rom.hrs.exception.NoTariffFoundException;
-import rom.hrs.exception.UnsupportedTariffTypeException;
 import rom.hrs.service.tariff.TariffCalculator;
 import rom.hrs.service.tariff.TariffCalculatorFactory;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)

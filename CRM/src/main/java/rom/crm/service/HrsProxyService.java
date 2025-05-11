@@ -15,6 +15,9 @@ import rom.crm.exception.TariffNotFoundException;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Прокси-сервис для взаимодействия с HRS сервисом.
+ */
 @Component
 @RequiredArgsConstructor
 public class HrsProxyService {

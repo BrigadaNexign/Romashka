@@ -1,10 +1,8 @@
 package rom.crm.service;
 
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import rom.crm.controller.BrtClient;
 import rom.crm.dto.request.BalanceUpdate;
@@ -16,6 +14,9 @@ import rom.crm.entity.TariffType;
 
 import java.time.LocalDate;
 
+/**
+ * Прокси-сервис для взаимодействия с BRT сервисом.
+ */
 @Service
 @RequiredArgsConstructor
 public class BrtProxyService {
@@ -30,6 +31,12 @@ public class BrtProxyService {
         brtClient.topUpBalance(msisdn, request);
     }
 
+    /**
+     * Создает пользователя с учетом особенностей тарифного плана.
+     *
+     * @param request DTO с данными пользователя
+     * @param tariffResponse информация о тарифе
+     */
     public void createUserWithTariff(UserUpdateRequest request, TariffResponse tariffResponse) {
         if (tariffResponse.type().equals(TariffType.INTERVAL.getId()) ||
                 tariffResponse.type().equals(TariffType.COMBINED.getId())
@@ -49,6 +56,11 @@ public class BrtProxyService {
         }
     }
 
+    /**
+     * Создает пользователя с базовыми параметрами.
+     *
+     * @param request DTO с данными пользователя
+     */
     public void createUser(UserUpdateRequest request) {
         brtClient.createUser(request);
     }

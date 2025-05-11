@@ -26,7 +26,6 @@ public class HealthController {
     public ResponseEntity<Map<String, String>> checkHealth() {
         Map<String, String> healthStatus = new HashMap<>();
 
-        // Check database connectivity
         try {
             jdbcTemplate.execute("SELECT 1");
             healthStatus.put("database", "UP");
@@ -34,7 +33,6 @@ public class HealthController {
             healthStatus.put("database", "DOWN: " + e.getMessage());
         }
 
-        // Check BRT connectivity
         try {
             restClient.get()
                     .uri("http://brt:8081/health")
@@ -45,7 +43,6 @@ public class HealthController {
             healthStatus.put("brt", "DOWN: " + e.getMessage());
         }
 
-        // Check HRS connectivity
         try {
             restClient.get()
                     .uri("http://hrs:8082/health")

@@ -1,5 +1,6 @@
 package rom.hrs.service;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -13,26 +14,19 @@ import rom.hrs.exception.NoTariffFoundException;
 import rom.hrs.service.tariff.TariffCalculator;
 import rom.hrs.service.tariff.TariffCalculatorFactory;
 
+/**
+ * Сервис для расчета стоимости звонков.
+ * Обрабатывает запросы на расчет, используя соответствующий калькулятор тарифа.
+ */
 @Service
+@RequiredArgsConstructor
 public class CalculationService {
     private static final Logger logger = LoggerFactory.getLogger(CalculationService.class);
-
     private final TariffService tariffService;
     private final TariffCalculatorFactory calculatorFactory;
     private final ResponseBuilder responseBuilder;
 
-    public CalculationService(
-            TariffService tariffService,
-            TariffCalculatorFactory calculatorFactory,
-            ResponseBuilder responseBuilder
-    ) {
-        this.tariffService = tariffService;
-        this.calculatorFactory = calculatorFactory;
-        this.responseBuilder = responseBuilder;
-    }
-
     public ResponseEntity<CalculationResponse> calculate(CalculationRequest request) {
-        // Validate input
         if (request == null || request.getCaller() == null || request.getCaller().tariffId() == null) {
             logger.warn("Invalid request: null or missing caller/tariffId");
             return ResponseEntity.badRequest().body(responseBuilder.createErrorResponse(
