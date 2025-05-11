@@ -24,3 +24,78 @@ docker-compose up -d
 ```
 docker-compose down
 ```
+
+## CRM
+
+## Эндпоинты аутентификации
+
+### Регистрация пользователя
+```
+POST /api/auth/signup
+```
+Тело запроса (SignUpRequest):
+```json
+{
+  "username": "String",
+  "email": "user@example.com",
+  "msisdn": "79992224466",
+  "password": "String",
+  "role": "MANAGER|SUBSCRIBER"
+}
+```
+Валидация:
+- Имя пользователя: обязательно, не пустое
+- Email: обязательно, валидный формат (5-255 символов)
+- Номер телефона: обязательно, российский формат (^[7-8]\d{10}$)
+- Пароль: максимум 255 символов
+- Роль: обязательно (MANAGER или SUBSCRIBER)
+
+### Авторизация
+```
+POST /api/auth/signin
+```
+Тело запроса (SignInRequest):
+```json
+{
+  "username": "String",
+  "password": "String"
+}
+```
+Валидация:
+- Имя пользователя: обязательно, не пустое
+- Пароль: обязательно, 8-255 символов
+
+## Эндпоинты управления тарифами
+
+### Создание нового тарифа
+```
+POST /api/manager/tariffs
+```
+Тело запроса (CreateTariffRequest):
+```json
+{
+  "name": "String",
+  "description": "String",
+  "intervalDays": 30,
+  "price": 300.0,
+  "callPrices": [
+    {
+      "callType": 1,
+      "pricePerMinute": 1.5
+    }
+  ],
+  "params": [
+    {
+      "name": "String",
+      "description": "String",
+      "value": 100.0,
+      "units": "minutes"
+    }
+  ]
+}
+```
+Валидация:
+- Название: обязательно, не пустое
+- Интервал дней: обязательно, положительное число
+- Цена: обязательно, положительное число
+- Цены звонков: для каждого типа обязательно указание цены

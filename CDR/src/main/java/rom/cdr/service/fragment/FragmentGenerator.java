@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import rom.cdr.entity.Fragment;
+import rom.cdr.exception.ConflictingCallsException;
 import rom.cdr.service.subscriber.SubscriberService;
 
 import java.time.LocalDateTime;
@@ -61,7 +62,8 @@ public class FragmentGenerator {
             for (Fragment fragment : fragments) {
                 result.addAll(saveWithMirror(fragment));
             }
-        }
+            return result;
+        } else logger.error("Not all fragments are valid");
         return result;
     }
 
@@ -107,19 +109,28 @@ public class FragmentGenerator {
 
     public boolean checkConflicts(Fragment fragment) {
         synchronized(getLockObject(fragment.getCallerMsisdn(), fragment.getReceiverMsisdn())) {
-            boolean hasConflict = hasConflicts(fragment);
-            if (hasConflict) {
-                logger.error("Conflict detected for call between {} and {} ({} - {})",
-                        fragment.getCallerMsisdn(),
-                        fragment.getReceiverMsisdn(),
-                        fragment.getStartTime(),
-                        fragment.getEndTime());
+            try {
+                boolean hasConflict = hasConflicts(fragment);
+                if (hasConflict) {
+                    logger.error("Conflict detected for call between {} and {} ({} - {})",
+                            fragment.getCallerMsisdn(),
+                            fragment.getReceiverMsisdn(),
+                            fragment.getStartTime(),
+                            fragment.getEndTime()
+                    );
+                    return false;
+                }
+                return true;
+            } catch (ConflictingCallsException e) {
+                return false;
+            } catch (Exception e) {
+                logger.error("Unknown exception during checking conflicts: {}", e.getMessage());
+                return false;
             }
-            return !hasConflict;
         }
     }
 
-    boolean hasConflicts(Fragment fragment) {
+    boolean hasConflicts(Fragment fragment) throws ConflictingCallsException {
         return fragmentService.hasConflictingCalls(
                 fragment.getCallerMsisdn(),
                 fragment.getReceiverMsisdn(),

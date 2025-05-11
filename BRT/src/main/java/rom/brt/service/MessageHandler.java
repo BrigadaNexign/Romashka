@@ -1,5 +1,6 @@
 package rom.brt.service;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +9,7 @@ import rom.brt.client.HRSClient;
 import rom.brt.dto.*;
 import rom.brt.entity.User;
 import rom.brt.exception.BusinessException;
+import rom.brt.exception.FailedResponseException;
 
 @Service
 @RequiredArgsConstructor
@@ -22,11 +24,10 @@ public class MessageHandler {
 
     public void handleMessage(String message) {
         try {
-            for (Fragment fragment: fragmentMapper.parseCsv(message)) {
+            for (Fragment fragment : fragmentMapper.parseCsv(message)) {
                 processCall(fragment);
             }
         } catch (Exception e) {
-            // TODO: exception handling
             logger.error(e.getLocalizedMessage());
         }
     }
@@ -59,10 +60,13 @@ public class MessageHandler {
 
         CalculationRequest request = requestBuilder.build(fragment, caller, receiver);
         logger.info("Sent request: {}", request);
-        CalculationResponse response = hrsClient.calculateCost(request);
-        logger.info("Received response: {}", response);
-
-
-        responseHandler.handleCalculationResponse(callerRecord, fragment, response);
+        try {
+            CalculationResponse response = hrsClient.calculateCost(request);
+            logger.info("Received response: {}", response);
+            responseHandler.handleCalculationResponse(callerRecord, fragment, response);
+        } catch (FeignException.Unauthorized e) {
+            logger.error("Unauthorized access to HRS: {}", e.getMessage());
+            throw new FailedResponseException("401", e.getMessage());
+        }
     }
 }

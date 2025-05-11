@@ -90,7 +90,7 @@ class CalculationServiceTest {
 
         ResponseEntity<CalculationResponse> result = calculationService.calculate(request);
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
         verify(responseBuilder).createErrorResponse(any(NoTariffFoundException.class));
     }
 

@@ -5,5 +5,5 @@ import rom.brt.entity.CallRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 @Repository
-public interface CallRecordRepository extends JpaRepository<CallRecord, Integer> {
+public interface CallRecordRepository extends JpaRepository<CallRecord, Long> {
 }

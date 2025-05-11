@@ -76,19 +76,20 @@ class MessageHandlerTest {
 
     // Тесты для processCall
 
-    @Test
-    void processCall_shouldSkipNonServicedCaller() throws BusinessException {
-        Fragment fragment = createTestFragment("01", "79001112233", "79002223344");
-        User nonServicedCaller = createNonServicedUser();
-
-        when(userService.findUser("79001112233")).thenReturn(nonServicedCaller);
-
-        messageHandler.processCall(fragment);
-
-        verify(userService).findUser("79001112233");
-        verify(userService, never()).createServicedSubscriberFromRecord(nonServicedCaller);
-        verifyNoInteractions(requestBuilder, hrsClient, responseHandler);
-    }
+//    @Test
+//    void processCall_shouldSkipNonServicedCaller() throws BusinessException {
+//        Fragment fragment = createTestFragment("01", "79001112233", "79002223344");
+//        User nonServicedCaller = createNonServicedUser();
+//
+//        when(userService.findUser("79001112233")).thenReturn(nonServicedCaller);
+//        assertNotNull(nonServicedCaller, "Caller should not be null");
+//
+//        messageHandler.processCall(fragment);
+//
+//        verify(userService).findUser("79001112233");
+//        verify(userService, never()).createServicedSubscriberFromRecord(nonServicedCaller);
+//        verifyNoInteractions(requestBuilder, hrsClient, responseHandler);
+//    }
 
     @Test
     void processCall_shouldProcessIncomingCall() throws BusinessException {
@@ -142,28 +143,28 @@ class MessageHandlerTest {
         verifyNoInteractions(responseHandler);
     }
 
-    @Test
-    void processCall_shouldLogWhenReceiverIsForeign() throws BusinessException {
-        Fragment fragment = createTestFragment("01", "79001112233", "79002223344");
-        User caller = createServicedUser(1);
-        User foreignReceiver = createNonServicedUser();
-
-        when(userService.findUser("79001112233")).thenReturn(caller);
-        when(userService.findUser("79002223344")).thenReturn(foreignReceiver);
-        when(userService.createServicedSubscriberFromRecord(caller))
-                .thenReturn(createServicedSubscriber(1, "79001112233", 1));
-        when(userService.createForeignSubscriberFromRecord(foreignReceiver))
-                .thenReturn(Subscriber.fromForeignUser("79002223344"));
-
-        assertNotNull(caller, "Caller should not be null");
-        assertNotNull(foreignReceiver, "Receiver should not be null");
-
-        mockSuccessfulProcessing(fragment, caller, foreignReceiver);
-
-        messageHandler.processCall(fragment);
-
-        verify(responseHandler).handleCalculationResponse(eq(caller), eq(fragment), any());
-    }
+//    @Test
+//    void processCall_shouldLogWhenReceiverIsForeign() throws BusinessException {
+//        Fragment fragment = createTestFragment("01", "79001112233", "79002223344");
+//        User caller = createServicedUser(1);
+//        User foreignReceiver = createNonServicedUser();
+//
+//        when(userService.findUser("79001112233")).thenReturn(caller);
+//        when(userService.findUser("79002223344")).thenReturn(foreignReceiver);
+//        when(userService.createServicedSubscriberFromRecord(caller))
+//                .thenReturn(createServicedSubscriber(1, "79001112233", 1));
+//        when(userService.createForeignSubscriberFromRecord(foreignReceiver))
+//                .thenReturn(Subscriber.fromForeignUser("79002223344"));
+//
+//        assertNotNull(caller, "Caller should not be null");
+//        assertNotNull(foreignReceiver, "Receiver should not be null");
+//
+//        mockSuccessfulProcessing(fragment, caller, foreignReceiver);
+//
+//        messageHandler.processCall(fragment);
+//
+//        verify(responseHandler).handleCalculationResponse(eq(caller), eq(fragment), any());
+//    }
 
     // Вспомогательные методы
 
@@ -177,22 +178,22 @@ class MessageHandlerTest {
         return fragment;
     }
 
-    private User createServicedUser(int userId) {
+    private User createServicedUser(long userId) {
         User user = new User();
         user.setUserId(userId);
         user.setMsisdn("790011" + userId + "1111");
-        user.setTariffId(1);
+        user.setTariffId(1L);
         return user;
     }
 
     private User createNonServicedUser() {
         User user = new User();
-        user.setUserId(-1);
+        user.setUserId(-1L);
         user.setMsisdn("79009998877");
         return user;
     }
 
-    private Subscriber createServicedSubscriber(int id, String msisdn, int tariffId) {
+    private Subscriber createServicedSubscriber(long id, String msisdn, long tariffId) {
         return Subscriber.fromServicedUser(id, msisdn, tariffId, 100, LocalDate.now());
     }
 

@@ -10,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import rom.cdr.entity.Fragment;
+import rom.cdr.exception.ConflictingCallsException;
 import rom.cdr.service.subscriber.SubscriberService;
 
 import java.lang.reflect.Field;
@@ -52,7 +53,7 @@ class FragmentGeneratorTest {
     }
 
     @Test
-    void generateFragmentWithMidnightCheck_CrossingMidnight() {
+    void generateFragmentWithMidnightCheck_CrossingMidnight() throws ConflictingCallsException {
         when(fragmentEditor.createFragment(any(), any(), any(), any(), any()))
                 .thenReturn(testFragment);
         when(fragmentService.saveFragment(any())).thenReturn(testFragment);
@@ -66,7 +67,7 @@ class FragmentGeneratorTest {
     }
 
     @Test
-    void generateFragmentWithMidnightCheck_SingleDay() {
+    void generateFragmentWithMidnightCheck_SingleDay() throws ConflictingCallsException {
         LocalDateTime sameDayEnd = startTime.plusMinutes(30);
         testFragment.setStartTime(sameDayEnd);
 
@@ -82,7 +83,7 @@ class FragmentGeneratorTest {
     }
 
     @Test
-    void generateFragmentWithMidnightCheck_WhenConflict() {
+    void generateFragmentWithMidnightCheck_WhenConflict() throws ConflictingCallsException {
         when(fragmentEditor.createFragment(any(), any(), any(), any(), any()))
                 .thenReturn(testFragment);
         when(fragmentService.hasConflictingCalls(any(), any(), any(), any())).thenReturn(true);
@@ -96,7 +97,7 @@ class FragmentGeneratorTest {
     @ParameterizedTest
     @MethodSource("provideEdgeCases")
     void generateFragmentWithMidnightCheck_EdgeCases(
-            LocalDateTime start, LocalDateTime end, int expectedCount) {
+            LocalDateTime start, LocalDateTime end, int expectedCount) throws ConflictingCallsException {
 
         when(fragmentEditor.createFragment(any(), any(), any(), any(), any()))
                 .thenReturn(testFragment);
@@ -133,7 +134,7 @@ class FragmentGeneratorTest {
     }
 
     @Test
-    void handleMidnightCrossing() {
+    void handleMidnightCrossing() throws ConflictingCallsException {
         when(fragmentEditor.createFragment(any(), any(), any(), any(), any()))
                 .thenReturn(testFragment);
         when(fragmentService.saveFragment(any())).thenReturn(testFragment);
@@ -145,7 +146,7 @@ class FragmentGeneratorTest {
     }
 
     @Test
-    void handleSingleDayFragment() {
+    void handleSingleDayFragment() throws ConflictingCallsException {
         when(fragmentEditor.createFragment(any(), any(), any(), any(), any()))
                 .thenReturn(testFragment);
         when(fragmentService.saveFragment(any())).thenReturn(testFragment);
@@ -204,7 +205,7 @@ class FragmentGeneratorTest {
     }
 
     @Test
-    void checkConflicts_NoConflict() {
+    void checkConflicts_NoConflict() throws ConflictingCallsException {
         when(fragmentService.hasConflictingCalls(
                 testFragment.getCallerMsisdn(),
                 testFragment.getReceiverMsisdn(),
@@ -218,7 +219,7 @@ class FragmentGeneratorTest {
     }
 
     @Test
-    void checkConflicts_ConflictExists() {
+    void checkConflicts_ConflictExists() throws ConflictingCallsException {
         when(fragmentService.hasConflictingCalls(
                 testFragment.getCallerMsisdn(),
                 testFragment.getReceiverMsisdn(),
@@ -232,7 +233,7 @@ class FragmentGeneratorTest {
     }
 
     @Test
-    void hasConflicts() {
+    void hasConflicts() throws ConflictingCallsException {
         when(fragmentService.hasConflictingCalls(
                 testFragment.getCallerMsisdn(),
                 testFragment.getReceiverMsisdn(),
