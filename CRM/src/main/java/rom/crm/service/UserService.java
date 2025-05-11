@@ -78,22 +78,5 @@ public class UserService {
         var username = SecurityContextHolder.getContext().getAuthentication().getName();
         return getByUsername(username);
     }
-
-    @PostConstruct
-    public void init() {
-        if (repository.findByUsername("Manager").isEmpty()) {
-            User manager = User.builder()
-                    .username("Manager")
-                    .email("manager.alex@company.com")
-                    .msisdn(null)
-                    .password(passwordEncoder.encode("secure_password_123"))
-                    .role(Role.MANAGER)
-                    .tariffId(null)
-                    .build();
-
-            repository.save(manager);
-            System.out.println("Created manager account");
-        }
-    }
 }
 

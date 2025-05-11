@@ -4,13 +4,7 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import rom.brt.dto.*;
 import rom.brt.entity.User;
@@ -20,7 +14,6 @@ import rom.brt.repository.UserParameterRepository;
 import rom.brt.repository.UserRepository;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -127,32 +120,6 @@ public class UserService {
             userParameterRepository.save(params);// Явное сохранение
         }
     }
-
-//    @Transactional
-//    public User createUser(UserUpdateRequest request) {
-//        User user = saveNewUser(request);
-//
-//        UserParams params = UserParams.builder()
-//                .minutes(request.minutes() != null ? request.minutes() : 0)
-//                .paymentDay(request.paymentDay())
-//                .build();
-//
-//        user.setUserParams(params);
-//        return userRepository.save(user);
-//    }
-//
-//    @Transactional
-//    public User saveNewUser(UserUpdateRequest request) {
-//        User user = User.builder()
-//                .userName(request.name())
-//                .msisdn(request.msisdn())
-//                .tariffId(request.tariffId())
-//                .balance(BigDecimal.valueOf(request.balance() != null ? request.balance() : 100.0))
-//                .registrationDate(LocalDateTime.now())
-//                .build();
-//
-//        return userRepository.save(user);
-//    }
 
     @Transactional
     public void changeUserTariff(String msisdn, ChangeTariffRequest request) throws UserNotFoundException {
