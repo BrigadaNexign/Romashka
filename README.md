@@ -18,6 +18,26 @@ password=admin
 driver-class-name=org.postgresql.Driver
 ```
 
+### Для запуска в Docker
+
+```
+docker-compose up -d --build
+```
+
+Для остановки
+
+```
+docker-compose down -v
+```
+
+### Для запуска сервисов в ручном режиме
+
+1. Убедиться, что в application.properties для каждого из сервисов все url заменены с названия контейнеров на localhost
+2. Выполнить команду
+```bash
+./gradlew clean bootJar
+```
+4. Запустить каждый из .jar по пути {CDR, BRT, HRS, CRM}/build/libs/
 
 ## Процесс разработки
 
