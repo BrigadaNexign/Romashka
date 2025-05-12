@@ -57,12 +57,11 @@ public class ManagerController {
             @ApiResponse(responseCode = "200", description = "Баланс успешно пополнен"),
             @ApiResponse(responseCode = "404", description = "Абонент не найден")
     })
-    @PostMapping("/subscriber/{msisdn}/balance/top-up")
+    @PostMapping("/subscriber/balance/top-up")
     public ResponseEntity<Void> topUpBalanceForSubscriber(
-            @PathVariable @NotNull @NotEmpty String msisdn,
             @RequestBody @Valid BalanceUpdate request
     ) {
-        brtProxyService.updateBalance(msisdn, request);
+        brtProxyService.updateBalance(request.msisdn(), request);
         return ResponseEntity.ok().build();
     }
 
@@ -71,7 +70,7 @@ public class ManagerController {
             @ApiResponse(responseCode = "200", description = "Тариф успешно изменен"),
             @ApiResponse(responseCode = "404", description = "Абонент или тариф не найден")
     })
-    @PostMapping("/subscriber/{msisdn}/tariff/change-tariff")
+    @PostMapping("/subscriber/tariff/change-tariff")
     public ResponseEntity<Void> changeSubscriberTariff(
             @PathVariable @NotNull @NotEmpty String msisdn,
             @RequestBody @Valid ChangeTariffRequest request

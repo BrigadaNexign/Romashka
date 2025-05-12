@@ -19,10 +19,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class BillingServiceTest {
-
     @Mock
     private UserRepository userRepository;
-
     @Mock
     private Logger logger;
 

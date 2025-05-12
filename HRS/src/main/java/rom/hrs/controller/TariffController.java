@@ -26,12 +26,12 @@ public class TariffController {
         return ResponseEntity.ok(tariffService.getAllTariffs(sortBy));
     }
 
-    @GetMapping("${services.hrs.api.mappings.tariff.by-msisdn}")
+    @GetMapping("by-msisdn/{msisdn}")
     public ResponseEntity<TariffResponse> getTariffByMsisdn(@PathVariable String msisdn) {
         return ResponseEntity.ok(tariffService.getTariffByMsisdn(msisdn));
     }
 
-    @GetMapping("${services.hrs.api.mappings.tariff.by-id}")
+    @GetMapping("/{tariffId}")
     public ResponseEntity<TariffResponse> findTariffById(@PathVariable long tariffId) {
         try {
             return ResponseEntity.ok(tariffService.findTariffResponseById(tariffId));
@@ -40,12 +40,12 @@ public class TariffController {
         }
     }
 
-    @PostMapping("${services.hrs.api.mappings.tariff.create}")
+    @PostMapping("/create")
     public ResponseEntity<TariffResponse> createTariff(@RequestBody @Valid CreateTariffRequest request) {
         return ResponseEntity.ok(tariffService.createTariff(request));
     }
 
-    @PostMapping("${services.hrs.api.mappings.tariff.delete}")
+    @PostMapping("/delete/{tariffId}")
     public ResponseEntity<Void> deleteTariff(@PathVariable long tariffId) {
         tariffService.deleteTariff(tariffId);
         return ResponseEntity.status(200).build();

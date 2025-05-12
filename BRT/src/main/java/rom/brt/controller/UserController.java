@@ -31,7 +31,7 @@ public class UserController {
      * @param msisdn Номер телефона пользователя в формате строки
      * @return ResponseEntity с данными пользователя или ошибкой 400 если пользователь не найден
      */
-    @GetMapping("${services.brt.api.mappings.user.get}")
+    @GetMapping("/{msisdn}")
     public ResponseEntity<UserResponse> getUserByMsisdn(
             @PathVariable String msisdn
     ) {
@@ -51,7 +51,7 @@ public class UserController {
      * @param request DTO с данными для создания пользователя
      * @return ResponseEntity с кодом 200 при успешном создании
      */
-    @PostMapping("${services.brt.api.mappings.user.create}")
+    @PostMapping("/create")
     public ResponseEntity<Void> createUser(
             @RequestBody @Valid UserUpdateRequest request
     ) {
@@ -67,7 +67,7 @@ public class UserController {
      * @param dto DTO с суммой пополнения
      * @return ResponseEntity с кодом 200 при успехе или 400 если пользователь не найден
      */
-    @PostMapping("${services.brt.api.mappings.top-up}")
+    @PostMapping("/{msisdn}/balance/top-up")
     public ResponseEntity<Void> topUpBalance(
             @PathVariable String msisdn,
             @RequestBody @Valid BalanceUpdate dto
@@ -89,7 +89,7 @@ public class UserController {
      * @param request DTO с ID нового тарифа
      * @return ResponseEntity с кодом 200 при успехе или 400 если пользователь не найден
      */
-    @PostMapping("${services.brt.api.mappings.tariff.change}")
+    @PostMapping("/{msisdn}/tariff/change")
     public ResponseEntity<Void> changeUserTariff(
             @PathVariable String msisdn,
             @RequestBody @Valid ChangeTariffRequest request

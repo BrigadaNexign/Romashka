@@ -1,4 +1,4 @@
-package rom.crm.config.security;
+package rom.crm.security;
 
 import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.FilterChain;

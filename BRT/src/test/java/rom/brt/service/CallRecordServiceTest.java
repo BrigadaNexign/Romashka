@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import rom.brt.dto.response.CalculationResponse;
 import rom.brt.dto.Fragment;
 import rom.brt.entity.CallRecord;
+import rom.brt.exception.DuplicateCallException;
 import rom.brt.repository.CallRecordRepository;
 
 import java.math.BigDecimal;
@@ -40,7 +41,7 @@ class CallRecordServiceTest {
                 .receiverMsisdn("79002223344")
                 .startTime(fragment.getStartTime())
                 .endTime(fragment.getEndTime())
-                .durationMinutes(5) // 4:30 округляется до 5 минут
+                .durationMinutes(5)
                 .cost(BigDecimal.valueOf(15.5))
                 .build();
 
@@ -60,47 +61,101 @@ class CallRecordServiceTest {
 
     @Test
     void saveCallRecord_shouldRoundUpDurationMinutes() {
-        // Given
-        Fragment fragment = createTestFragmentWithDuration(4, 31); // 4 минуты 31 секунда
+        Fragment fragment = createTestFragmentWithDuration(4, 31);
         CalculationResponse response = createTestResponse(10.0);
 
         when(callRecordRepository.save(any(CallRecord.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        // When
         CallRecord result = callRecordService.saveCallRecord(fragment, response);
 
-        // Then
-        assertEquals(5, result.getDurationMinutes()); // Должно округлиться вверх
+        assertEquals(5, result.getDurationMinutes());
     }
 
     @Test
     void saveCallRecord_shouldHandleExactMinutes() {
-        // Given
-        Fragment fragment = createTestFragmentWithDuration(5, 0); // Ровно 5 минут
+        Fragment fragment = createTestFragmentWithDuration(5, 0);
         CalculationResponse response = createTestResponse(10.0);
 
         when(callRecordRepository.save(any(CallRecord.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        // When
         CallRecord result = callRecordService.saveCallRecord(fragment, response);
 
-        // Then
-        assertEquals(5, result.getDurationMinutes()); // Без округления
+        assertEquals(5, result.getDurationMinutes());
     }
 
     @Test
     void saveCallRecord_shouldHandleZeroCost() {
-        // Given
         Fragment fragment = createTestFragment();
         CalculationResponse response = createTestResponse(0.0);
 
         when(callRecordRepository.save(any(CallRecord.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        // When
         CallRecord result = callRecordService.saveCallRecord(fragment, response);
 
-        // Then
         assertEquals(0.0, result.getCost().doubleValue());
+    }
+
+    @Test
+    void existsDuplicate_shouldReturnTrue_whenDuplicateExists() {
+        // Given
+        Fragment fragment = createTestFragment();
+        when(callRecordRepository.existsByCallTypeAndCallerMsisdnAndReceiverMsisdnAndStartTimeAndEndTime(
+                fragment.getCallType(),
+                fragment.getCallerMsisdn(),
+                fragment.getReceiverMsisdn(),
+                fragment.getStartTime(),
+                fragment.getEndTime()
+        )).thenReturn(true);
+
+        // When
+        boolean result = callRecordService.existsDuplicate(fragment);
+
+        // Then
+        assertTrue(result);
+        verify(callRecordRepository).existsByCallTypeAndCallerMsisdnAndReceiverMsisdnAndStartTimeAndEndTime(
+                fragment.getCallType(),
+                fragment.getCallerMsisdn(),
+                fragment.getReceiverMsisdn(),
+                fragment.getStartTime(),
+                fragment.getEndTime()
+        );
+    }
+
+    @Test
+    void existsDuplicate_shouldReturnFalse_whenNoDuplicateExists() {
+        // Given
+        Fragment fragment = createTestFragment();
+        when(callRecordRepository.existsByCallTypeAndCallerMsisdnAndReceiverMsisdnAndStartTimeAndEndTime(
+                any(), any(), any(), any(), any()
+        )).thenReturn(false);
+
+        // When
+        boolean result = callRecordService.existsDuplicate(fragment);
+
+        // Then
+        assertFalse(result);
+    }
+
+    @Test
+    void existsDuplicate_shouldHandleNullFragment() {
+        assertThrows(NullPointerException.class, () -> callRecordService.existsDuplicate(null));
+    }
+
+    @Test
+    void existsDuplicate_shouldHandlePartialNullFields() {
+        // Given
+        Fragment fragment = new Fragment();
+        fragment.setCallType("01");
+        fragment.setCallerMsisdn(null);
+        fragment.setReceiverMsisdn("79002223344");
+        fragment.setStartTime(LocalDateTime.now());
+        fragment.setEndTime(null);
+
+        // When/Then
+        assertDoesNotThrow(() -> callRecordService.existsDuplicate(fragment));
+        verify(callRecordRepository).existsByCallTypeAndCallerMsisdnAndReceiverMsisdnAndStartTimeAndEndTime(
+                "01", null, "79002223344", fragment.getStartTime(), null
+        );
     }
 
     private Fragment createTestFragment() {
@@ -109,7 +164,7 @@ class CallRecordServiceTest {
         fragment.setCallerMsisdn("79001112233");
         fragment.setReceiverMsisdn("79002223344");
         fragment.setStartTime(LocalDateTime.now());
-        fragment.setEndTime(LocalDateTime.now().plusMinutes(4).plusSeconds(30)); // 4 минуты 30 секунд
+        fragment.setEndTime(LocalDateTime.now().plusMinutes(4).plusSeconds(30));
         return fragment;
     }
 

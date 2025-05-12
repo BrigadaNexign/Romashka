@@ -20,7 +20,7 @@ public class HrsController {
     private static final Logger logger = LoggerFactory.getLogger(HrsController.class);
     private final CalculationService calculationService;
 
-    @PostMapping("${services.hrs.api.mappings.calculate}")
+    @PostMapping("/calculate")
     public ResponseEntity<CalculationResponse> calculateCost(@RequestBody CalculationRequest request) {
         logger.info("Received request: {}", request);
         ResponseEntity<CalculationResponse> response = calculationService.calculate(request);

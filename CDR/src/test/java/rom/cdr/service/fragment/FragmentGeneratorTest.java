@@ -24,13 +24,10 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class FragmentGeneratorTest {
-
     @Mock
     private SubscriberService subscriberService;
-
     @Mock
     private FragmentEditor fragmentEditor;
-
     @Mock
     private FragmentService fragmentService;
 

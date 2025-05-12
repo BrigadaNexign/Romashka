@@ -2,14 +2,16 @@ package rom.crm.dto.auth;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import rom.crm.entity.Role;
 
 @Data
 @Schema(description = "Запрос на регистрацию")
+@AllArgsConstructor
 public class SignUpRequest {
 
-    @Schema(description = "Имя пользователя", example = "Mike")
+    @Schema(description = "Имя пользователя", example = "Сергеев Сергей Сергеевич")
     @NotBlank(message = "Имя пользователя не может быть пустыми")
     private String username;
 
@@ -19,7 +21,7 @@ public class SignUpRequest {
     @Email(message = "Email адрес должен быть в формате user@example.com")
     private String email;
 
-    @Schema(description = "Номер телефона пользователя", example = "79905553535")
+    @Schema(description = "Номер телефона пользователя", example = "79992223355")
     @Size(min = 11, max = 11, message = "Номер телефона должен быть длинной 11 символов")
     @NotBlank(message = "Номер телефона не может быть пустыми")
     @Pattern(regexp = "^[7-8]\\d{10}$")

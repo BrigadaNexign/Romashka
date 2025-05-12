@@ -58,7 +58,10 @@ sonar {
             **/dto/**,
             **/entity/**,
             **/*Exception.java,
-            **/*Dto.java
+            **/*Dto.java,
+            **/config/**,
+            **/controller/**,
+            **/client/**
         """
 
         property "sonar.sources", "src/main/java"

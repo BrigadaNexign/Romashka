@@ -21,19 +21,15 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ResponseHandlerTest {
-
     @Mock
     private CallRecordService callRecordService;
-
     @Mock
     private BillingService billingService;
-
     @InjectMocks
     private ResponseHandler responseHandler;
 
     @Test
     void handleCalculationResponse_shouldProcessValidResponse() throws BusinessException {
-        // Given
         User caller = new User();
         Fragment fragment = new Fragment();
         CalculationResponse response = createValidResponse();
@@ -41,10 +37,8 @@ class ResponseHandlerTest {
         CallRecord expectedRecord = new CallRecord();
         when(callRecordService.saveCallRecord(fragment, response)).thenReturn(expectedRecord);
 
-        // When
         responseHandler.handleCalculationResponse(caller, fragment, response);
 
-        // Then
         verify(billingService).processBilling(caller, response);
         verify(callRecordService).saveCallRecord(fragment, response);
     }

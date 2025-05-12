@@ -1,4 +1,4 @@
-package rom.crm.controller;
+package rom.crm.client;
 
 import jakarta.validation.Valid;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -9,32 +9,32 @@ import rom.crm.dto.response.TariffResponse;
 
 import java.util.List;
 
-/**
- * Feign клиент для взаимодействия с HRS сервисом.
- */
 @FeignClient(
         name = "hrs",
-        url = "${services.hrs.url}" + "${services.hrs.api.mappings.tariff.base}"
+        url = "${services.hrs.url}${services.hrs.api.mappings.tariff.base}"
 )
 public interface HrsClient {
 
-    @GetMapping()
-    ResponseEntity<List<TariffResponse>> getAllTariffs (
+    @GetMapping
+    ResponseEntity<List<TariffResponse>> getAllTariffs(
             @RequestParam(required = false) String sortBy
     );
 
-    @GetMapping("${services.hrs.api.mappings.tariff.by-id}")
+    @GetMapping("/{tariffId}")
     ResponseEntity<TariffResponse> getTariffById(
             @PathVariable long tariffId
     );
 
-    @PostMapping("${services.hrs.api.mappings.tariff.create}")
+    @PostMapping("/create")
     ResponseEntity<Void> createTariff(
             @RequestBody @Valid CreateTariffRequest request
     );
 
-    @GetMapping("${services.hrs.api.mappings.tariff.delete}")
+    @DeleteMapping("/delete/{tariffId}")
     ResponseEntity<Void> deleteTariff(
             @PathVariable long tariffId
     );
+
+    @GetMapping("/health")
+    ResponseEntity<Void> checkHealth();
 }

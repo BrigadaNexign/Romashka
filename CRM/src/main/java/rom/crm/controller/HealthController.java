@@ -20,7 +20,9 @@ import java.util.Map;
 public class HealthController {
     private final JdbcTemplate jdbcTemplate;
     private final RestClient restClient;
-
+    private static final String STATUS_UP = "UP";
+    private static final String STATUS_DOWN = "DOWN";
+    
     @Operation(summary = "Check service health")
     @GetMapping
     public ResponseEntity<Map<String, String>> checkHealth() {
@@ -28,9 +30,9 @@ public class HealthController {
 
         try {
             jdbcTemplate.execute("SELECT 1");
-            healthStatus.put("database", "UP");
+            healthStatus.put("database", STATUS_UP);
         } catch (Exception e) {
-            healthStatus.put("database", "DOWN: " + e.getMessage());
+            healthStatus.put("database", STATUS_DOWN + ": " + e.getMessage());
         }
 
         try {
@@ -38,9 +40,9 @@ public class HealthController {
                     .uri("http://brt:8081/health")
                     .retrieve()
                     .toBodilessEntity();
-            healthStatus.put("brt", "UP");
+            healthStatus.put("brt", STATUS_UP);
         } catch (Exception e) {
-            healthStatus.put("brt", "DOWN: " + e.getMessage());
+            healthStatus.put("brt", STATUS_DOWN + ": " + e.getMessage());
         }
 
         try {
@@ -48,9 +50,9 @@ public class HealthController {
                     .uri("http://hrs:8082/health")
                     .retrieve()
                     .toBodilessEntity();
-            healthStatus.put("hrs", "UP");
+            healthStatus.put("hrs", STATUS_UP);
         } catch (Exception e) {
-            healthStatus.put("hrs", "DOWN: " + e.getMessage());
+            healthStatus.put("hrs", STATUS_DOWN + ": " + e.getMessage());
         }
 
         return ResponseEntity.ok(healthStatus);

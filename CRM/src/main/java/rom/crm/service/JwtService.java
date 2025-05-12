@@ -24,9 +24,6 @@ public class JwtService {
     @Value("${token.signing.key}")
     private String jwtSigningKey;
 
-    @Value("${token.signing.service-ttl}")
-    private Duration serviceTokenTtl;
-
     public String extractUserName(String token) {
         return extractClaim(token, Claims::getSubject);
     }

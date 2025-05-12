@@ -19,10 +19,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class FragmentServiceTest {
-
     @Mock
     private FragmentRepository fragmentRepository;
-
     @InjectMocks
     private FragmentService fragmentService;
 

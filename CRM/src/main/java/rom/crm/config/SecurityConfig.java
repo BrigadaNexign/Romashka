@@ -1,4 +1,4 @@
-package rom.crm.config.security;
+package rom.crm.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import rom.crm.security.JwtAuthenticationFilter;
 import rom.crm.entity.Role;
 import rom.crm.service.UserService;
 
