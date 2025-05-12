@@ -1,5 +1,8 @@
 package rom.cdr.exception;
 
+/**
+ * Базовое исключение для ошибок генерации CDR.
+ */
 public class GenerationException extends Exception {
     private ErrorCode errorCode;
 

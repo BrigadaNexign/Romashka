@@ -6,6 +6,10 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * Сущность для хранения информации о телефонных звонках.
+ * Содержит детали вызовов и их стоимость для HRS.
+ */
 @Entity
 @Table(name = "call_records")
 @Getter
@@ -19,7 +23,7 @@ public class CallRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "call_id")
-    private Integer callId;
+    private Long callId;
 
     @Column(name = "call_type", nullable = false, length = 2)
     private String callType;

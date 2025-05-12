@@ -1,4 +1,4 @@
-package rom.brt.dto;
+package rom.brt.dto.response;
 
 import lombok.*;
 

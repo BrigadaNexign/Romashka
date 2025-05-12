@@ -19,15 +19,12 @@ import rom.hrs.service.CallPricingService;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PerMinuteTariffCalculatorTest {
-
     @Mock
     private CallPricingService pricingService;
-
     @Mock
     private Logger logger;
 
@@ -58,7 +55,7 @@ class PerMinuteTariffCalculatorTest {
     }
 
     @Test
-    void calculate_ShouldUseFreeMinutes_WhenEnoughMinutesAvailable() throws BusinessException {
+    void calculate_useFreeMinutes() throws BusinessException {
         int initialMinutes = request.getCaller().minutes();
         int duration = request.getDurationMinutes();
 
@@ -70,7 +67,7 @@ class PerMinuteTariffCalculatorTest {
     }
 
     @Test
-    void calculate_ShouldPartiallyUseFreeMinutes_WhenNotEnoughMinutes() throws BusinessException {
+    void calculate_partiallyUseFreeMinutes() throws BusinessException {
         request.setDurationMinutes(150);
         int expectedRemaining = 0;
         int expectedChargedDuration = 50;
@@ -87,7 +84,7 @@ class PerMinuteTariffCalculatorTest {
     }
 
     @Test
-    void calculate_ShouldChargeFullCall_WhenNoFreeMinutes() throws BusinessException {
+    void calculate_chargeFullCall() throws BusinessException {
         request.setCaller(callerWithoutMinutes);
 
         CalculationResponse result = calculator.calculate(request, tariff, response);
@@ -101,7 +98,7 @@ class PerMinuteTariffCalculatorTest {
     }
 
     @Test
-    void calculate_ShouldPropagateException_WhenPricingFails() throws BusinessException {
+    void calculate_exception() throws BusinessException {
         request.setCaller(callerWithoutMinutes);
         PricingNotFoundException exception = new PricingNotFoundException(tariff.getId(), PricingType.OUTGOING_BOTH_SERVICED);
 
@@ -117,18 +114,18 @@ class PerMinuteTariffCalculatorTest {
     }
 
     @Test
-    void hasFreeMinutes_ShouldReturnTrue_WhenMinutesAvailable() {
+    void hasFreeMinutes_returnTrue() {
         assertTrue(calculator.hasFreeMinutes(request));
     }
 
     @Test
-    void hasFreeMinutes_ShouldReturnFalse_WhenNoMinutes() {
+    void hasFreeMinutes_returnFalse() {
         request.setCaller(callerWithoutMinutes);
         assertFalse(calculator.hasFreeMinutes(request));
     }
 
     @Test
-    void applyFreeMinutes_ShouldSetZeroRemaining_WhenExactlyEnoughMinutes() throws BusinessException {
+    void applyFreeMinutes_setZeroRemaining() throws BusinessException {
         request.setDurationMinutes(callerWithMinutes.minutes());
 
         calculator.applyFreeMinutes(request, tariff, response);
@@ -138,14 +135,14 @@ class PerMinuteTariffCalculatorTest {
     }
 
     @Test
-    void applyFreeMinutes_ShouldNotCallPricing_WhenEnoughMinutes() throws BusinessException {
+    void applyFreeMinutes_notCallPricing() throws BusinessException {
         calculator.applyFreeMinutes(request, tariff, response);
 
         verifyNoInteractions(pricingService);
     }
 
     @Test
-    void applyFreeMinutes_ShouldModifyRequestDuration_WhenPartialFreeMinutes() throws BusinessException {
+    void applyFreeMinutes_modifyRequestDuration() throws BusinessException {
         int initialDuration = 150;
         request.setDurationMinutes(initialDuration);
 

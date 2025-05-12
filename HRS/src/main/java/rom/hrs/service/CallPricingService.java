@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rom.hrs.dto.CalculationRequest;
 import rom.hrs.dto.CalculationResponse;
+import rom.hrs.dto.CallPriceDto;
 import rom.hrs.entity.CallPricing;
 import rom.hrs.entity.CallType;
 import rom.hrs.entity.PricingType;
@@ -14,13 +15,25 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+/**
+ * Сервис для работы с ценами звонков.
+ * Определяет стоимость звонков по типам вызовов.
+ */
 @Service
 @RequiredArgsConstructor
 public class CallPricingService {
     private static final Logger logger = LoggerFactory.getLogger(CallPricingService.class);
     private final CallPricingRepository callPricingRepository;
 
+    /**
+     * Применяет стоимость звонка к расчету.
+     * @param request данные запроса
+     * @param tariff тариф абонента
+     * @param response объект ответа для обновления
+     * @throws BusinessException при ошибках расчета
+     */
     public void applyCallPricing(CalculationRequest request, Tariff tariff, CalculationResponse response)
             throws BusinessException {
 
@@ -41,6 +54,15 @@ public class CallPricingService {
                 });
 
         response.setCost(response.getCost() + pricing.getCostPerMin().doubleValue() * request.getDurationMinutes());
+    }
+
+    public List<CallPriceDto> findListOfDtoById(Long tariffId) {
+        return callPricingRepository.findByTariffId(tariffId).stream()
+                .map(callPricing -> CallPriceDto.builder()
+                        .callType(callPricing.getId().getCallType())
+                        .pricePerMinute(callPricing.getCostPerMin().doubleValue())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     public PricingType resolvePricingType(CalculationRequest request) throws InvalidCallTypeException, UnsupportedCallServiceCombinationException {

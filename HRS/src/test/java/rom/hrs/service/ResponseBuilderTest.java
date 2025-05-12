@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.slf4j.Logger;
 import rom.hrs.dto.CalculationRequest;
 import rom.hrs.dto.CalculationResponse;
 import rom.hrs.dto.Subscriber;
@@ -44,7 +43,7 @@ class ResponseBuilderTest {
     }
 
     @Test
-    void initResponse_ShouldCreateResponseWithCorrectInitialValues() {
+    void initResponse_createResponseWithCorrectInitialValues() {
         CalculationResponse result = responseBuilder.initResponse(request, tariff);
 
         assertNotNull(result);
@@ -59,7 +58,7 @@ class ResponseBuilderTest {
     }
 
     @Test
-    void fillDefaultFields_ShouldSetSuccessAndDefaultValues() {
+    void fillDefaultFields_setSuccessAndDefaultValues() {
         response.setSuccess(false);
         response.setNextPaymentDate(null);
 
@@ -73,7 +72,7 @@ class ResponseBuilderTest {
     }
 
     @Test
-    void fillDefaultFields_ShouldNotOverrideExistingNextPaymentDate() {
+    void fillDefaultFields_notOverrideExistingNextPaymentDate() {
         LocalDate customDate = LocalDate.now().plusDays(10);
         response.setNextPaymentDate(customDate);
 
@@ -83,7 +82,7 @@ class ResponseBuilderTest {
     }
 
     @Test
-    void createErrorResponse_ShouldCreateBusinessErrorResponse() {
+    void createErrorResponse_createBusinessErrorResponse() {
         BusinessException exception = new InvalidCallTypeException("Invalid call type");
 
         CalculationResponse result = responseBuilder.createErrorResponse(exception);
@@ -95,7 +94,7 @@ class ResponseBuilderTest {
     }
 
     @Test
-    void createErrorResponse_ShouldCreateGenericErrorResponse() {
+    void createErrorResponse_createGenericErrorResponse() {
         Exception exception = new RuntimeException("Unexpected error");
 
         CalculationResponse result = responseBuilder.createErrorResponse(exception);
@@ -107,7 +106,7 @@ class ResponseBuilderTest {
     }
 
     @Test
-    void validateSuccessfulResponse_ShouldNotThrow_WhenAllRequiredFieldsPresent() {
+    void validateSuccessfulResponse_notThrow() {
         response.setSuccess(true);
         response.setCost(10.0);
         response.setTariffType("1");
@@ -121,7 +120,7 @@ class ResponseBuilderTest {
     }
 
     @Test
-    void validateSuccessfulResponse_ShouldThrow_WhenResponseIsNull() {
+    void validateSuccessfulResponse_throw() {
         IncompleteResponseException exception = assertThrows(IncompleteResponseException.class,
                 () -> responseBuilder.validateSuccessfulResponse(null, "cost"));
 
@@ -129,7 +128,7 @@ class ResponseBuilderTest {
     }
 
     @Test
-    void validateSuccessfulResponse_ShouldNotValidate_WhenNotSuccess() {
+    void validateSuccessfulResponse_notValidate() {
         response.setSuccess(false);
 
         assertDoesNotThrow(() ->
@@ -138,7 +137,7 @@ class ResponseBuilderTest {
     }
 
     @Test
-    void validateSuccessfulResponse_ShouldThrow_WhenFieldsMissing() {
+    void validateSuccessfulResponse_throw_fieldsMissing() {
         response.setSuccess(true);
         response.setCost(null);
         response.setTariffType(null);
@@ -156,7 +155,7 @@ class ResponseBuilderTest {
     }
 
     @Test
-    void validateSuccessfulResponse_ShouldThrow_WhenUnknownFieldRequested() {
+    void validateSuccessfulResponse_throw_unknownFieldRequested() {
         response.setSuccess(true);
 
         assertThrows(IllegalArgumentException.class,

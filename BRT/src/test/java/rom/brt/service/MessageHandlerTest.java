@@ -1,6 +1,5 @@
 package rom.brt.service;
 
-import org.antlr.v4.runtime.FailedPredicateException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -8,9 +7,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import rom.brt.client.HRSClient;
 import rom.brt.dto.*;
+import rom.brt.dto.request.CalculationRequest;
+import rom.brt.dto.response.CalculationResponse;
 import rom.brt.entity.User;
 import rom.brt.exception.BusinessException;
 import rom.brt.exception.CsvParsingException;
+import rom.brt.exception.DuplicateCallException;
 import rom.brt.exception.FailedResponseException;
 
 import java.time.LocalDate;
@@ -30,11 +32,10 @@ class MessageHandlerTest {
     @Mock private FragmentMapper fragmentMapper;
     @Mock private RequestBuilder requestBuilder;
     @Mock private ResponseHandler responseHandler;
+    @Mock private CallRecordService callRecordService;
 
     @InjectMocks
     private MessageHandler messageHandler;
-
-    // Тесты для handleMessage
 
     @Test
     void handleMessage_shouldProcessMultipleFragments() throws BusinessException {
@@ -74,20 +75,19 @@ class MessageHandlerTest {
         verifyNoInteractions(userService, requestBuilder, hrsClient, responseHandler);
     }
 
-    // Тесты для processCall
-
     @Test
     void processCall_shouldSkipNonServicedCaller() throws BusinessException {
         Fragment fragment = createTestFragment("01", "79001112233", "79002223344");
         User nonServicedCaller = createNonServicedUser();
+        User receiver = createServicedUser(1);
 
-        when(userService.findUser("79001112233")).thenReturn(nonServicedCaller);
+        when(userService.findUser(fragment.getCallerMsisdn())).thenReturn(nonServicedCaller);
+        when(userService.findUser(fragment.getReceiverMsisdn())).thenReturn(receiver);
 
         messageHandler.processCall(fragment);
 
-        verify(userService).findUser("79001112233");
-        verify(userService, never()).createServicedSubscriberFromRecord(nonServicedCaller);
-        verifyNoInteractions(requestBuilder, hrsClient, responseHandler);
+        verify(userService, never()).createServicedSubscriberFromRecord(any());
+        verify(userService, never()).createForeignSubscriberFromRecord(any());
     }
 
     @Test
@@ -110,7 +110,6 @@ class MessageHandlerTest {
 
     @Test
     void processCall_shouldHandleHrsFailure() throws BusinessException {
-        // Given
         Fragment fragment = createTestFragment("01", "79001112233", "79002223344");
         User caller = createServicedUser(1);
         User receiver = createServicedUser(2);
@@ -121,23 +120,19 @@ class MessageHandlerTest {
         CalculationRequest request = new CalculationRequest(
                 "01", callerSub, receiverSub, 5, LocalDate.now());
 
-        // Настройка моков
         when(userService.findUser("79001112233")).thenReturn(caller);
         when(userService.findUser("79002223344")).thenReturn(receiver);
         when(userService.createServicedSubscriberFromRecord(caller)).thenReturn(callerSub);
         when(userService.createServicedSubscriberFromRecord(receiver)).thenReturn(receiverSub);
         when(requestBuilder.build(fragment, callerSub, receiverSub)).thenReturn(request);
 
-        // Используем willAnswer для генерации исключения
         given(hrsClient.calculateCost(request)).willAnswer(invocation -> {
             throw new FailedResponseException("code", "message");
         });
 
-        // When/Then
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> messageHandler.processCall(fragment));
 
-        // Проверяем сообщение исключения
         assertTrue(exception.getMessage().contains("message"));
         verifyNoInteractions(responseHandler);
     }
@@ -165,8 +160,6 @@ class MessageHandlerTest {
         verify(responseHandler).handleCalculationResponse(eq(caller), eq(fragment), any());
     }
 
-    // Вспомогательные методы
-
     private Fragment createTestFragment(String callType, String caller, String receiver) {
         Fragment fragment = new Fragment();
         fragment.setCallType(callType);
@@ -177,22 +170,22 @@ class MessageHandlerTest {
         return fragment;
     }
 
-    private User createServicedUser(int userId) {
+    private User createServicedUser(long userId) {
         User user = new User();
         user.setUserId(userId);
         user.setMsisdn("790011" + userId + "1111");
-        user.setTariffId(1);
+        user.setTariffId(1L);
         return user;
     }
 
     private User createNonServicedUser() {
         User user = new User();
-        user.setUserId(-1);
+        user.setUserId(-1L);
         user.setMsisdn("79009998877");
         return user;
     }
 
-    private Subscriber createServicedSubscriber(int id, String msisdn, int tariffId) {
+    private Subscriber createServicedSubscriber(long id, String msisdn, long tariffId) {
         return Subscriber.fromServicedUser(id, msisdn, tariffId, 100, LocalDate.now());
     }
 

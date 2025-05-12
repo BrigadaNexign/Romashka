@@ -20,16 +20,12 @@ import rom.hrs.exception.PricingNotFoundException;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CombinedTariffCalculatorTest {
-
     @Mock
     private IntervalTariffCalculator intervalCalculator;
-
     @Mock
     private PerMinuteTariffCalculator perMinuteCalculator;
 
@@ -58,7 +54,7 @@ class CombinedTariffCalculatorTest {
     }
 
     @Test
-    void calculate_ShouldCallBothCalculatorsInOrder_WhenSuccess() throws BusinessException {
+    void calculate_callBothCalculators() throws BusinessException {
         when(intervalCalculator.calculate(any(), any(), any()))
                 .thenAnswer(invocation -> {
                     CalculationResponse resp = invocation.getArgument(2);
@@ -88,7 +84,7 @@ class CombinedTariffCalculatorTest {
     }
 
     @Test
-    void calculate_ShouldCombineResultsCorrectly_WhenBothCalculatorsModifyResponse() throws BusinessException {
+    void calculate_combineResults() throws BusinessException {
         when(intervalCalculator.calculate(any(), any(), any()))
                 .thenAnswer(invocation -> {
                     CalculationResponse resp = invocation.getArgument(2);
@@ -117,7 +113,7 @@ class CombinedTariffCalculatorTest {
     }
 
     @Test
-    void calculate_ShouldThrowBusinessExceptionSubtype_WhenIntervalCalculatorFails() throws BusinessException {
+    void calculate_throwBusinessException_intervalCalculatorFails() throws BusinessException {
         when(intervalCalculator.calculate(any(), any(), any()))
                 .thenThrow(new NoIntervalsFoundException(tariff.getId()));
 
@@ -129,7 +125,7 @@ class CombinedTariffCalculatorTest {
     }
 
     @Test
-    void calculate_ShouldThrowBusinessExceptionSubtype_WhenPerMinuteCalculatorFails() throws BusinessException {
+    void calculate_throwBusinessException_perMinuteCalculatorFails() throws BusinessException {
         when(intervalCalculator.calculate(any(), any(), any()))
                 .thenAnswer(invocation -> invocation.getArgument(2));
         when(perMinuteCalculator.calculate(any(), any(), any()))
@@ -143,7 +139,7 @@ class CombinedTariffCalculatorTest {
     }
 
     @Test
-    void calculate_ShouldThrowBusinessExceptionSubtype() throws BusinessException {
+    void calculate_throwBusinessExceptionSubtype() throws BusinessException {
         when(intervalCalculator.calculate(any(), any(), any()))
                 .thenAnswer(invocation -> invocation.getArgument(2));
         when(perMinuteCalculator.calculate(any(), any(), any()))
@@ -157,46 +153,39 @@ class CombinedTariffCalculatorTest {
     }
 
     @Test
-    void calculate_ShouldMaintainSingleResponseObject_ThroughAllCalculators() throws BusinessException {
-        // Arrange
+    void calculate_maintainSingleResponseObject() throws BusinessException {
         when(intervalCalculator.calculate(any(), any(), any()))
                 .thenAnswer(invocation -> invocation.getArgument(2));
 
         when(perMinuteCalculator.calculate(any(), any(), any()))
                 .thenAnswer(invocation -> invocation.getArgument(2));
 
-        // Act
         CalculationResponse result = calculator.calculate(request, tariff, response);
 
-        // Assert
         assertSame(response, result);
         verify(intervalCalculator).calculate(eq(request), eq(tariff), same(response));
         verify(perMinuteCalculator).calculate(eq(request), eq(tariff), same(response));
     }
 
     @Test
-    void calculate_ShouldHandleNullInitialCost_Properly() throws BusinessException {
-        // Arrange
+    void calculate_handleNullInitialCost() throws BusinessException {
         when(intervalCalculator.calculate(any(), any(), any()))
                 .thenAnswer(invocation -> {
                     CalculationResponse resp = invocation.getArgument(2);
-                    resp.setCost(100.0); // устанавливаем начальную стоимость
+                    resp.setCost(100.0);
                     return resp;
                 });
 
         when(perMinuteCalculator.calculate(any(), any(), any()))
                 .thenAnswer(invocation -> {
                     CalculationResponse resp = invocation.getArgument(2);
-                    // безопасное увеличение стоимости, даже если изначально было null
                     double currentCost = resp.getCost() != null ? resp.getCost() : 0.0;
                     resp.setCost(currentCost + 50.0);
                     return resp;
                 });
 
-        // Act
         CalculationResponse result = calculator.calculate(request, tariff, response);
 
-        // Assert
         assertEquals(150.0, result.getCost(), 0.001);
     }
 }

@@ -2,11 +2,15 @@ package rom.brt.dto;
 
 import java.time.LocalDate;
 
+/**
+ * Представляет абонента.
+ * Может быть как обслуживаемым (с тарифом), так и внешним (без тарифа).
+ */
 public record Subscriber(
-        Integer id,
+        Long id,
         String msisdn,
         boolean isServiced,
-        Integer tariffId,
+        Long tariffId,
         Integer minutes,
         LocalDate paymentDay
 ) {
@@ -22,10 +26,16 @@ public record Subscriber(
         }
     }
 
-    public static Subscriber fromServicedUser(int id, String msisdn, int tariffId, int minutes, LocalDate paymentDay) {
+    /**
+     * Создает обслуживаемого абонента.
+     */
+    public static Subscriber fromServicedUser(long id, String msisdn, long tariffId, int minutes, LocalDate paymentDay) {
         return new Subscriber(id, msisdn, true, tariffId, minutes, paymentDay);
     }
 
+    /**
+     * Создает внешнего абонента (не обслуживаемого нашей системой).
+     */
     public static Subscriber fromForeignUser(String msisdn) {
         return new Subscriber(null, msisdn, false, null, null, null);
     }

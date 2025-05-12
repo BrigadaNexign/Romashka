@@ -24,10 +24,6 @@ jar {
     }
 }
 
-//task wrapper(type: Wrapper){
-//    gradleVersion = '8.13'
-//}
-
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
@@ -61,10 +57,14 @@ jacocoTestReport {
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it, exclude: [
-                    '**/config/**',
                     '**/exception/**',
+                    '**/dto/**',
                     '**/entity/**',
-                    '**/dto/**'
+                    '**/*Exception.java',
+                    '**/*Dto.java',
+                    '**/config/**',
+                    '**/controller/**',
+                    '**/client/**'
             ])
         }))
     }

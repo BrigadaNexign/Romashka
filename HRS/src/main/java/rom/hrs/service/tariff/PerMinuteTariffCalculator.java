@@ -1,8 +1,8 @@
 package rom.hrs.service.tariff;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import rom.hrs.dto.CalculationRequest;
 import rom.hrs.dto.CalculationResponse;
@@ -10,15 +10,15 @@ import rom.hrs.entity.Tariff;
 import rom.hrs.exception.*;
 import rom.hrs.service.CallPricingService;
 
+/**
+ * Калькулятор поминутного тарифа.
+ * Рассчитывает стоимость по количеству минут разговора.
+ */
 @Component
+@RequiredArgsConstructor
 public class PerMinuteTariffCalculator implements TariffCalculator {
     private final static Logger logger = LoggerFactory.getLogger(PerMinuteTariffCalculator.class);
     private final CallPricingService pricingService;
-
-    @Autowired
-    public PerMinuteTariffCalculator(CallPricingService pricingService) {
-        this.pricingService = pricingService;
-    }
 
     @Override
     public CalculationResponse calculate(CalculationRequest request, Tariff tariff, CalculationResponse response)
@@ -36,7 +36,9 @@ public class PerMinuteTariffCalculator implements TariffCalculator {
         return request.getCaller().minutes() > 0;
     }
 
-    // Могли остаться от другого тарифа или подарочные при подключении
+    /**
+     * Применяет бесплатные минуты к расчету.
+     */
     void applyFreeMinutes(CalculationRequest request, Tariff tariff, CalculationResponse response)
             throws BusinessException {
         logger.debug("Caller {} from request {} has available minutes", request.getCaller(), request);

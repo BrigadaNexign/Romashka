@@ -19,12 +19,10 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class IntervalTariffCalculatorTest {
-
     @Mock
     private TariffIntervalRepository tariffIntervalRepository;
 
@@ -55,56 +53,46 @@ class IntervalTariffCalculatorTest {
     }
 
     @Test
-    void calculate_ShouldApplyIntervalFee_WhenPaymentDue() throws NoIntervalsFoundException {
-
-        // Arrange
+    void calculate_applyIntervalFee() throws NoIntervalsFoundException {
         TariffInterval intervalEntity = createTariffInterval(1, 30, BigDecimal.valueOf(100.0));
-        when(tariffIntervalRepository.findByTariffId(anyLong()))
+        when(tariffIntervalRepository.findAllByTariffId(anyLong()))
                 .thenReturn(List.of(intervalEntity));
 
-        // Act
         CalculationResponse result = calculator.calculate(request, tariff, response);
 
-        // Assert
         assertSame(response, result);
         assertEquals(100.0, result.getCost(), 0.001);
         assertEquals(caller.paymentDay().plusDays(30), result.getNextPaymentDate());
-        verify(tariffIntervalRepository).findByTariffId(tariff.getId());
+        verify(tariffIntervalRepository).findAllByTariffId(tariff.getId());
     }
 
     @Test
-    void calculate_ShouldThrowException_WhenNoIntervalsFound() {
-        // Arrange
-        when(tariffIntervalRepository.findByTariffId(anyLong()))
+    void calculate_throwException() {
+        when(tariffIntervalRepository.findAllByTariffId(anyLong()))
                 .thenReturn(Collections.emptyList());
 
-        // Act & Assert
         assertThrows(NoIntervalsFoundException.class,
                 () -> calculator.calculate(request, tariff, response));
-        verify(tariffIntervalRepository).findByTariffId(tariff.getId());
+        verify(tariffIntervalRepository).findAllByTariffId(tariff.getId());
     }
 
     @Test
-    void calculate_ShouldUseFirstInterval_WhenMultipleIntervalsFound() throws NoIntervalsFoundException {
-        // Arrange
+    void calculate_useFirstInterval() throws NoIntervalsFoundException {
         TariffInterval interval1 = createTariffInterval(1, 30, BigDecimal.valueOf(100.0));
         TariffInterval interval2 = createTariffInterval(2, 60, BigDecimal.valueOf(180.0));
 
-        when(tariffIntervalRepository.findByTariffId(anyLong()))
+        when(tariffIntervalRepository.findAllByTariffId(anyLong()))
                 .thenReturn(List.of(interval1, interval2));
 
-        // Act
         CalculationResponse result = calculator.calculate(request, tariff, response);
 
-        // Assert
         assertSame(response, result);
         assertEquals(100.0, result.getCost(), 0.001);
-        verify(tariffIntervalRepository).findByTariffId(tariff.getId());
+        verify(tariffIntervalRepository).findAllByTariffId(tariff.getId());
     }
 
     @Test
-    void calculate_ShouldNotApplyFee_WhenPaymentNotDue() throws NoIntervalsFoundException {
-        // Arrange
+    void calculate_notApplyFee() throws NoIntervalsFoundException {
         Subscriber currentCaller = new Subscriber(3, "89996666666", true, 1L, 3, LocalDate.now());
         request = new CalculationRequest(
                 "01",
@@ -114,10 +102,8 @@ class IntervalTariffCalculatorTest {
                 LocalDate.now()
         );
 
-        // Act
         CalculationResponse result = calculator.calculate(request, tariff, response);
 
-        // Assert
         assertSame(response, result);
         assertNull(result.getCost());
         assertNull(result.getNextPaymentDate());
@@ -125,30 +111,25 @@ class IntervalTariffCalculatorTest {
     }
 
     @Test
-    void calculate_ShouldAddToExistingCost_WhenCostAlreadySet() throws NoIntervalsFoundException {
-        // Arrange
+    void calculate_addToExistingCost() throws NoIntervalsFoundException {
         TariffInterval intervalEntity = createTariffInterval(1, 30, BigDecimal.valueOf(100.0));
-        when(tariffIntervalRepository.findByTariffId(anyLong()))
+        when(tariffIntervalRepository.findAllByTariffId(anyLong()))
                 .thenReturn(List.of(intervalEntity));
 
         response.setCost(50.0);
 
-        // Act
         CalculationResponse result = calculator.calculate(request, tariff, response);
 
-        // Assert
         assertEquals(150.0, result.getCost(), 0.001);
     }
 
     @Test
-    void isIntervalPaymentDue_ShouldReturnTrue_WhenPaymentOverdue() {
-        // Act & Assert
+    void isIntervalPaymentDue_returnTrue() {
         assertTrue(calculator.isIntervalPaymentDue(request));
     }
 
     @Test
-    void isIntervalPaymentDue_ShouldReturnFalse_WhenPaymentNotDue() {
-        // Arrange
+    void isIntervalPaymentDue_returnFalse() {
         Subscriber currentCaller = new Subscriber(3, "89996666666", true, 1L, 3, LocalDate.now());
         CalculationRequest currentRequest = new CalculationRequest(
                 "01",
@@ -158,28 +139,24 @@ class IntervalTariffCalculatorTest {
                 LocalDate.now()
         );
 
-        // Act & Assert
         assertFalse(calculator.isIntervalPaymentDue(currentRequest));
     }
 
     @Test
-    void getIntervalsByTariffId_ShouldReturnConvertedDtos() {
-        // Arrange
+    void getIntervalsByTariffId_returnConvertedDtos() {
         TariffInterval intervalEntity = createTariffInterval(1, 30, BigDecimal.valueOf(100.0));
-        when(tariffIntervalRepository.findByTariffId(anyLong()))
+        when(tariffIntervalRepository.findAllByTariffId(anyLong()))
                 .thenReturn(List.of(intervalEntity));
 
-        // Act
         List<TariffIntervalDto> result = calculator.getIntervalsByTariffId(1L);
 
-        // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(30, result.get(0).getInterval());
         assertEquals(100.0, result.get(0).getPrice().doubleValue(), 0.001);
     }
 
-    private TariffInterval createTariffInterval(int id, int interval, BigDecimal price) {
+    private TariffInterval createTariffInterval(long id, int interval, BigDecimal price) {
         TariffInterval intervalEntity = new TariffInterval();
         intervalEntity.setId(new TariffIntervalId(id, interval));
         intervalEntity.setPrice(price);

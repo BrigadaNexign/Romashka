@@ -54,7 +54,7 @@ class CallPricingServiceTest {
     }
 
     @Test
-    void applyCallPricing_ShouldApplyCost_WhenPricingFound() throws BusinessException {
+    void applyCallPricing_applyCost() throws BusinessException {
         CallPricing pricing = new CallPricing(
                 new CallPricingId(1L, 1),
                 BigDecimal.valueOf(1.5),
@@ -70,7 +70,7 @@ class CallPricingServiceTest {
     }
 
     @Test
-    void applyCallPricing_ShouldThrowException_WhenNoPricingsFound() {
+    void applyCallPricing_throwException() {
         when(callPricingRepository.findByTariffId(anyLong()))
                 .thenReturn(List.of());
 
@@ -80,7 +80,7 @@ class CallPricingServiceTest {
     }
 
     @Test
-    void applyCallPricing_ShouldThrowException_WhenPricingTypeNotFound() {
+    void applyCallPricing_throwException_pricingTypeNotFound() {
         CallPricing wrongPricing = new CallPricing(
                 new CallPricingId(1L, 2),
                 BigDecimal.valueOf(1.5),
@@ -95,7 +95,7 @@ class CallPricingServiceTest {
     }
 
     @Test
-    void resolvePricingType_ShouldReturnOutgoingBothServiced_WhenBothServiced() throws BusinessException {
+    void resolvePricingType_returnOutgoingBothServiced() throws BusinessException {
         request.setCallType("01");
         request.setReceiver(servicedReceiver);
 
@@ -105,7 +105,7 @@ class CallPricingServiceTest {
     }
 
     @Test
-    void resolvePricingType_ShouldReturnOutgoingCallerServiced_WhenOnlyCallerServiced() throws BusinessException {
+    void resolvePricingType_returnOutgoingCallerServiced() throws BusinessException {
         request.setCallType("01");
         request.setReceiver(unservicedReceiver);
 
@@ -115,7 +115,7 @@ class CallPricingServiceTest {
     }
 
     @Test
-    void resolvePricingType_ShouldReturnIncomingBothServiced_WhenBothServiced() throws BusinessException {
+    void resolvePricingType_returnIncomingBothServiced() throws BusinessException {
         request.setCallType("02");
         request.setReceiver(servicedReceiver);
 
@@ -125,7 +125,7 @@ class CallPricingServiceTest {
     }
 
     @Test
-    void resolvePricingType_ShouldReturnIncomingCallerServiced_WhenOnlyCallerServiced() throws BusinessException {
+    void resolvePricingType_returnIncomingCallerServiced() throws BusinessException {
         request.setCallType("02");
         request.setReceiver(unservicedReceiver);
 
@@ -135,7 +135,7 @@ class CallPricingServiceTest {
     }
 
     @Test
-    void resolvePricingType_ShouldThrowException_WhenUnsupportedCallType() {
+    void resolvePricingType_throwException() {
         request.setCallType("03");
 
         assertThrows(InvalidCallTypeException.class, () ->
@@ -144,7 +144,7 @@ class CallPricingServiceTest {
     }
 
     @Test
-    void resolvePricingType_ShouldThrowException_WhenUnsupportedCombination() {
+    void resolvePricingType_throwException_unsupportedCombination() {
         request.setCallType("01");
         request.setCaller(unservicedCaller());
 
@@ -154,7 +154,7 @@ class CallPricingServiceTest {
     }
 
     @Test
-    void applyCallPricing_ShouldAddToExistingCost_WhenCostAlreadySet() throws BusinessException {
+    void applyCallPricing_addToExistingCost() throws BusinessException {
         CallPricing pricing = new CallPricing(
                 new CallPricingId(1L, 1),
                 BigDecimal.valueOf(1.5),
@@ -170,7 +170,7 @@ class CallPricingServiceTest {
     }
 
     @Test
-    void applyCallPricing_ShouldHandleZeroDuration_WhenNoAdditionalCost() throws BusinessException {
+    void applyCallPricing_handleZeroDuration() throws BusinessException {
         CallPricing pricing = new CallPricing(
                 new CallPricingId(1L, 1),
                 BigDecimal.valueOf(1.5),

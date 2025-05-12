@@ -4,6 +4,9 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+/**
+ * Результат расчета стоимости звонка.
+ */
 @Data
 @Getter
 @Setter

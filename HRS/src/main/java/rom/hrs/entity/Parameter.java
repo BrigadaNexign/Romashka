@@ -16,7 +16,7 @@ import lombok.*;
 public class Parameter {
     @Id
     @Column(name = "param_id")
-    private Integer id;
+    private Long id;
 
     @Column(name = "param_name", nullable = false, unique = true)
     private String name;

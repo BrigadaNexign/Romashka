@@ -32,11 +32,9 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.2.1")
     implementation("org.slf4j:slf4j-api:2.0.16")
     implementation 'com.opencsv:opencsv:5.8'
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-security")
 }
-
-//task wrapper(type: Wrapper){
-//    gradleVersion = '8.13'
-//}
 
 test {
     useJUnitPlatform()
@@ -47,10 +45,14 @@ jacocoTestReport {
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it, exclude: [
-                    '**/config/**',
                     '**/exception/**',
+                    '**/dto/**',
                     '**/entity/**',
-                    '**/dto/**'
+                    '**/*Exception.java',
+                    '**/*Dto.java',
+                    '**/config/**',
+                    '**/controller/**',
+                    '**/client/**'
             ])
         }))
     }

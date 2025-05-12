@@ -13,3 +13,9 @@ VALUES (12, 1, 50);
 
 INSERT INTO tariff_intervals (tariff_id, interval, price)
 VALUES (12, 30, 100);
+
+CREATE TABLE subscriber_tariffs (
+    id BIGINT PRIMARY KEY,
+    msisdn VARCHAR(11) NOT NULL UNIQUE,
+    tariff_id BIGINT NOT NULL REFERENCES tariffs(tariff_id) ON DELETE CASCADE
+);

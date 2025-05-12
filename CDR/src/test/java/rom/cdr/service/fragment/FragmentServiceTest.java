@@ -8,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.params.provider.MethodSource;
+import rom.cdr.exception.ConflictingCallsException;
 import rom.cdr.repository.FragmentRepository;
 
 import java.time.LocalDateTime;
@@ -18,10 +19,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class FragmentServiceTest {
-
     @Mock
     private FragmentRepository fragmentRepository;
-
     @InjectMocks
     private FragmentService fragmentService;
 
@@ -31,7 +30,7 @@ class FragmentServiceTest {
     private final String receiver = "79992223344";
 
     @Test
-    void hasConflictingCalls_ConflictExists() {
+    void hasConflictingCalls_ConflictExists() throws ConflictingCallsException {
         when(fragmentRepository.existsConflictingCalls(
                 caller, receiver, startTime, endTime))
                 .thenReturn(true);
@@ -45,7 +44,7 @@ class FragmentServiceTest {
     }
 
     @Test
-    void hasConflictingCalls_NoConflict() {
+    void hasConflictingCalls_NoConflict() throws ConflictingCallsException {
         when(fragmentRepository.existsConflictingCalls(
                 caller, receiver, startTime, endTime))
                 .thenReturn(false);
@@ -61,7 +60,7 @@ class FragmentServiceTest {
     void hasConflictingCalls_AnyParameterIsNull(
             String caller, String receiver, LocalDateTime start, LocalDateTime end
     ) {
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(ConflictingCallsException.class, () ->
                 fragmentService.hasConflictingCalls(caller, receiver, start, end)
         );
     }
@@ -71,12 +70,10 @@ class FragmentServiceTest {
         LocalDateTime start = LocalDateTime.now();
         LocalDateTime end = start.minusMinutes(5);
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        ConflictingCallsException exception = assertThrows(
+                ConflictingCallsException.class,
                 () -> fragmentService.hasConflictingCalls("79991112233", "79992223344", start, end)
         );
-
-        assertEquals("End time cannot be before start time", exception.getMessage());
     }
 
     @Test
@@ -91,7 +88,7 @@ class FragmentServiceTest {
     }
 
     @Test
-    void hasConflictingCalls_ShouldWorkWithValidParameters() {
+    void hasConflictingCalls_ShouldWorkWithValidParameters() throws ConflictingCallsException {
         LocalDateTime start = LocalDateTime.now();
         LocalDateTime end = start.plusMinutes(5);
 

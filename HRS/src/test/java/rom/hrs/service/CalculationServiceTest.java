@@ -14,17 +14,13 @@ import rom.hrs.dto.CalculationResponse;
 import rom.hrs.dto.Subscriber;
 import rom.hrs.entity.Tariff;
 import rom.hrs.exception.BusinessException;
-import rom.hrs.exception.IncompleteResponseException;
 import rom.hrs.exception.NoTariffFoundException;
-import rom.hrs.exception.UnsupportedTariffTypeException;
 import rom.hrs.service.tariff.TariffCalculator;
 import rom.hrs.service.tariff.TariffCalculatorFactory;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -68,7 +64,7 @@ class CalculationServiceTest {
     }
 
     @Test
-    void calculate_ShouldReturnSuccessResponse_WhenAllStepsCompleted() throws Exception {
+    void calculate_returnSuccessResponse() throws Exception {
         when(tariffService.findTariffById(anyLong())).thenReturn(tariff);
         when(calculatorFactory.getCalculator(any())).thenReturn(tariffCalculator);
         when(responseBuilder.initResponse(any(), any())).thenReturn(basicResponse);
@@ -83,19 +79,19 @@ class CalculationServiceTest {
     }
 
     @Test
-    void calculate_ShouldReturnNotFound_WhenTariffNotFound() throws NoTariffFoundException {
+    void calculate_returnNotFound() throws NoTariffFoundException {
         when(tariffService.findTariffById(anyLong())).thenReturn(null);
         when(responseBuilder.createErrorResponse(any(NoTariffFoundException.class)))
                 .thenReturn(new CalculationResponse());
 
         ResponseEntity<CalculationResponse> result = calculationService.calculate(request);
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
         verify(responseBuilder).createErrorResponse(any(NoTariffFoundException.class));
     }
 
     @Test
-    void calculate_ShouldHandleRuntimeException_WhenFillFieldsFails() throws BusinessException {
+    void calculate_handleRuntimeException() throws BusinessException {
         RuntimeException exception = new RuntimeException("Fill fields error");
         when(tariffService.findTariffById(anyLong())).thenReturn(tariff);
         when(calculatorFactory.getCalculator(any())).thenReturn(tariffCalculator);
@@ -115,7 +111,7 @@ class CalculationServiceTest {
     }
 
     @Test
-    void calculate_ShouldHandleGenericException_WithInternalServerError() throws Exception {
+    void calculate_handleGenericException() throws Exception {
         RuntimeException exception = new RuntimeException("Unexpected error");
         when(tariffService.findTariffById(anyLong())).thenReturn(tariff);
         when(calculatorFactory.getCalculator(any())).thenReturn(tariffCalculator);
@@ -131,7 +127,7 @@ class CalculationServiceTest {
     }
 
     @Test
-    void calculate_ShouldCallAllServicesInCorrectOrder() throws Exception {
+    void calculate_callAllServicesInCorrectOrder() throws Exception {
         when(tariffService.findTariffById(anyLong())).thenReturn(tariff);
         when(calculatorFactory.getCalculator(any())).thenReturn(tariffCalculator);
         when(responseBuilder.initResponse(any(), any())).thenReturn(basicResponse);
