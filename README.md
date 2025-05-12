@@ -1,5 +1,24 @@
 # Romashka
 
+## Документация
+
+Схема взаимодействия сервисов и схема баз данных находятся в [доске в Miro](https://miro.com/app/board/uXjVIG6AxXs=/?share_link_id=827728461258)
+
+### SwaggerUI
+
+```
+http://localhost:8083/swagger-ui/index.html
+```
+
+### Данные для авторизации в бд
+```
+url=jdbc:postgresql://localhost:54320/romashka
+username=admin
+password=admin
+driver-class-name=org.postgresql.Driver
+```
+
+
 ## Процесс разработки
 
 ### Планирование и организация
@@ -57,6 +76,12 @@ http://localhost:8080
 
 ## BRT
 
+### Base URL
+
+```
+http://localhost:8081
+```
+
 ### Обработка CDR
 
 1. **Парсинг CSV из очереди**:  
@@ -101,6 +126,12 @@ BRT и HRS связаны между собой по REST
 ---
 
 ## HRS
+
+### Base URL
+
+```
+http://localhost:8082
+```
 
 ### Тарифы
 
@@ -152,28 +183,32 @@ BRT и HRS связаны между собой по REST
 http://localhost:8083
 ```
 
-### SwaggerUI
-
-```
-http://localhost:8083/swagger-ui/index.html
-```
-
 ### Эндпоинты аутентификации
 
 #### Возвращают JWT-токен
 
-#### Регистрация пользователя
+#### Регистрация пользователя  
 ```
 POST /api/auth/sign-up
 ```
-Тело запроса (SignUpRequest):
+Тело запроса (SignUpRequest) для менеджера:
 ```json
 {
-  "username": "String",
-  "email": "user@example.com",
-  "msisdn": "79992224466",
-  "password": "String",
-  "role": "MANAGER|SUBSCRIBER"
+  "username": "Vladimir",
+  "email": "vladimir@example.com",
+  "msisdn": "79994446688",
+  "password": "password",
+  "role": "MANAGER"
+}
+```
+Тело запроса (SignUpRequest) для абонента
+```json
+{
+  "username": "Alexander",
+  "email": "alexander@example.com",
+  "msisdn": "79995557799",
+  "password": "password",
+  "role": "SUBSCRIBER"
 }
 ```
 Валидация:
@@ -187,11 +222,18 @@ POST /api/auth/sign-up
 ```
 POST /api/auth/sign-in
 ```
-Тело запроса (SignInRequest):
+Тело запроса (SignInRequest) для менеджера:
 ```json
 {
-  "username": "String",
-  "password": "String"
+  "username": "Vladimir",
+  "password": "password"
+}
+```
+Тело запроса (SignInRequest) для абонента:
+```json
+{
+  "username": "Alexander",
+  "password": "password"
 }
 ```
 Валидация:
@@ -216,9 +258,9 @@ POST /api/manager/subscriber/create
 ```json
 {
   "name": "string",
-  "msisdn": "79991234567",
+  "msisdn": "79995557799",
   "tariffId": 11,
-  "balance": 100.0,
+  "balance": 50.0,
   "minutes": 100,
   "paymentDay": "2025-01-01"
 }
@@ -235,11 +277,12 @@ POST /api/manager/subscriber/create
 
 #### Пополнить баланс
 ```
-POST /api/manager/subscriber/{msisdn}/balance/top-up
+POST /api/manager/subscriber/balance/top-up
 ```
 Тело запроса:
 ```json
 {
+  "msisdn": 79995557799
   "amount": 100.0
 }
 ```
@@ -248,6 +291,7 @@ POST /api/manager/subscriber/{msisdn}/balance/top-up
 ```
 POST /api/manager/subscriber/{msisdn}/tariff/change-tariff
 ```
+
 Тело запроса:
 ```json
 {
@@ -300,11 +344,7 @@ POST /api/user/subscriber/balance/top-up
 Для запуска:
 
 ```
-docker-compose build
-```
-
-```
-docker-compose up -d
+docker-compose up -d --build
 ```
 
 Для остановки
@@ -312,6 +352,8 @@ docker-compose up -d
 ```
 docker-compose down -v
 ```
+
+## 
 
 ### Недостатки и улучшения
 1. Структура таблиц и сервиса HRS позволяют добавить обработку СМС и интернет-трафика
