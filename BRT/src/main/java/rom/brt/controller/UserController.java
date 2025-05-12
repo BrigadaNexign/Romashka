@@ -6,10 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import rom.brt.dto.BalanceUpdate;
-import rom.brt.dto.ChangeTariffRequest;
-import rom.brt.dto.UserResponse;
-import rom.brt.dto.UserUpdateRequest;
+import rom.brt.dto.request.BalanceUpdate;
+import rom.brt.dto.request.ChangeTariffRequest;
+import rom.brt.dto.response.UserResponse;
+import rom.brt.dto.request.UserUpdateRequest;
 import rom.brt.exception.UserNotFoundException;
 import rom.brt.service.UserService;
 

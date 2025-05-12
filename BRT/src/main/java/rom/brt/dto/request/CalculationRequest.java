@@ -1,6 +1,7 @@
-package rom.brt.dto;
+package rom.brt.dto.request;
 
 import lombok.*;
+import rom.brt.dto.Subscriber;
 
 import java.time.LocalDate;
 

@@ -7,6 +7,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import rom.brt.client.HRSClient;
 import rom.brt.dto.*;
+import rom.brt.dto.request.CalculationRequest;
+import rom.brt.dto.response.CalculationResponse;
 import rom.brt.entity.User;
 import rom.brt.exception.BusinessException;
 import rom.brt.exception.CsvParsingException;
@@ -29,11 +31,10 @@ class MessageHandlerTest {
     @Mock private FragmentMapper fragmentMapper;
     @Mock private RequestBuilder requestBuilder;
     @Mock private ResponseHandler responseHandler;
+    @Mock private CallRecordService callRecordService;
 
     @InjectMocks
     private MessageHandler messageHandler;
-
-    // Тесты для handleMessage
 
     @Test
     void handleMessage_shouldProcessMultipleFragments() throws BusinessException {

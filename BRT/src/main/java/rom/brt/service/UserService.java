@@ -6,6 +6,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rom.brt.dto.*;
+import rom.brt.dto.request.BalanceUpdate;
+import rom.brt.dto.request.ChangeTariffRequest;
+import rom.brt.dto.request.UserUpdateRequest;
+import rom.brt.dto.response.UserResponse;
 import rom.brt.entity.User;
 import rom.brt.entity.UserParams;
 import rom.brt.exception.UserNotFoundException;
@@ -163,10 +167,12 @@ public class UserService {
         return new UserResponse(
                 user.getUserId(),
                 user.getUserName(),
-                user.getTariffId(),
                 user.getMsisdn(),
+                user.getTariffId(),
                 user.getBalance(),
-                user.getRegistrationDate()
+                user.getUserParams().getMinutes(),
+                user.getRegistrationDate(),
+                user.getUserParams().getPaymentDay()
         );
     }
 

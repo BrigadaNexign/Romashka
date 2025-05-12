@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import rom.hrs.dto.*;
+import rom.hrs.entity.Tariff;
 import rom.hrs.exception.NoTariffFoundException;
 import rom.hrs.service.TariffService;
 
@@ -40,9 +41,8 @@ public class TariffController {
     }
 
     @PostMapping("${services.hrs.api.mappings.tariff.create}")
-    public ResponseEntity<Void> createTariff(@RequestBody @Valid CreateTariffRequest request) {
-        tariffService.createTariff(request);
-        return ResponseEntity.status(201).build();
+    public ResponseEntity<TariffResponse> createTariff(@RequestBody @Valid CreateTariffRequest request) {
+        return ResponseEntity.ok(tariffService.createTariff(request));
     }
 
     @PostMapping("${services.hrs.api.mappings.tariff.delete}")

@@ -7,8 +7,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import rom.brt.client.HRSClient;
 import rom.brt.dto.*;
+import rom.brt.dto.request.CalculationRequest;
+import rom.brt.dto.response.CalculationResponse;
 import rom.brt.entity.User;
 import rom.brt.exception.BusinessException;
+import rom.brt.exception.DuplicateCallException;
 import rom.brt.exception.FailedResponseException;
 
 /**
@@ -23,17 +26,21 @@ public class MessageHandler {
     private final FragmentMapper fragmentMapper;
     private final RequestBuilder requestBuilder;
     private final ResponseHandler responseHandler;
+    private final CallRecordService callRecordService;
 
     private final Logger logger = LoggerFactory.getLogger(MessageHandler.class);
 
     /**
      * Обрабатывает сообщение с CDR-данными.
+     * Проверяет, обрабатывался ли уже такой запрос
      *
      * @param message CDR в формате CSV
      */
     public void handleMessage(String message) {
         try {
             for (Fragment fragment : fragmentMapper.parseCsv(message)) {
+                if (callRecordService.existsDuplicate(fragment))
+                    throw new DuplicateCallException(fragment.toString());
                 processCall(fragment);
             }
         } catch (Exception e) {

@@ -5,7 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import rom.brt.dto.CalculationResponse;
+import rom.brt.dto.response.CalculationResponse;
 import rom.brt.dto.Fragment;
 import rom.brt.entity.CallRecord;
 import rom.brt.entity.User;
