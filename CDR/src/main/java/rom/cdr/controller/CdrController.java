@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class CdrController {
     @Autowired
     private RecordGenerator recordGenerator;
+    private LocalDateTime currentDate = LocalDateTime.now().minusYears(1);;
 
     /**
      * Генерирует CDR записи за указанное количество лет.
@@ -24,11 +25,13 @@ public class CdrController {
      */
     @GetMapping("/generate/year/{years}")
     public String generateForYears(@PathVariable int years) {
+        LocalDateTime nextDate = currentDate.plusYears(years);
         recordGenerator.generateForPeriod(
-                LocalDateTime.now().minusYears(years),
-                LocalDateTime.now()
+                currentDate,
+                nextDate
         );
-        return "Генерация CDR за " + years + " год(а/лет) запущена";
+        currentDate = nextDate;
+        return "Started generation for 1 year";
     }
 
     /**
@@ -39,11 +42,13 @@ public class CdrController {
      */
     @GetMapping("/generate/month/{months}")
     public String generateForMonths(@PathVariable int months) {
+        LocalDateTime nextDate = currentDate.plusMonths(months);
         recordGenerator.generateForPeriod(
-                LocalDateTime.now().minusMonths(months),
-                LocalDateTime.now()
+                currentDate,
+                nextDate
         );
-        return "Генерация CDR за " + months + " месяц(ев) запущена";
+        currentDate = nextDate;
+        return "Started generation for " + months + " month(s)";
     }
 
     /**
@@ -54,29 +59,29 @@ public class CdrController {
      */
     @GetMapping("/generate/week/{weeks}")
     public String generateForWeeks(@PathVariable int weeks) {
+        LocalDateTime nextDate = currentDate.plusWeeks(weeks);
         recordGenerator.generateForPeriod(
-                LocalDateTime.now().minusWeeks(weeks),
-                LocalDateTime.now()
+                currentDate,
+                nextDate
         );
-        return "Генерация CDR за " + weeks + " недель(ю/и) запущена";
+        currentDate = nextDate;
+        return "Started generation for " + weeks + " week(s)";
     }
 
     /**
-     * Генерирует CDR записи за пользовательский период времени.
+     * Генерирует CDR записи за указанное количество дней.
      *
-     * @param start начальная дата периода (формат: yyyy-MM-dd'T'HH:mm:ss)
-     * @param end конечная дата периода (формат: yyyy-MM-dd'T'HH:mm:ss)
+     * @param days количество дней для генерации данных
      * @return сообщение о статусе операции
      */
-    @GetMapping("/generate/custom")
-    public String generateCustom(
-            @RequestParam String start,
-            @RequestParam String end
-    ) {
+    @GetMapping("/generate/day/{days}")
+    public String generateForDays(@PathVariable int days) {
+        LocalDateTime nextDate = currentDate.plusDays(days);
         recordGenerator.generateForPeriod(
-                LocalDateTime.parse(start),
-                LocalDateTime.parse(end)
+                currentDate,
+                nextDate
         );
-        return "Генерация CDR за указанный период запущена";
+        currentDate = nextDate;
+        return "Started generation for " + days + " day(s)";
     }
 }

@@ -8,7 +8,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * Главный класс приложения CRM.
  */
 @SpringBootApplication()
-@EnableFeignClients(basePackages = {"rom.crm.controller"})
+@EnableFeignClients(basePackages = {"rom.crm.client"})
 public class CrmApplication {
     /**
      * Точка входа в приложение CRM.

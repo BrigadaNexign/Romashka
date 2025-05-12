@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import rom.brt.dto.CalculationResponse;
+import rom.brt.dto.response.CalculationResponse;
 import rom.brt.entity.User;
 import rom.brt.repository.UserRepository;
 

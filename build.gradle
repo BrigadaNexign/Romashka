@@ -58,14 +58,17 @@ sonar {
             **/dto/**,
             **/entity/**,
             **/*Exception.java,
-            **/*Dto.java
+            **/*Dto.java,
+            **/config/**,
+            **/controller/**,
+            **/client/**
         """
 
         property "sonar.sources", "src/main/java"
         property "sonar.tests", "src/test/java"
         property "sonar.java.binaries", "build/classes/java/main"
 
-        property "sonar.modules", "BRT,CDR,HRS"
+        property "sonar.modules", "BRT,CDR,HRS,CRM"
     }
 }
 

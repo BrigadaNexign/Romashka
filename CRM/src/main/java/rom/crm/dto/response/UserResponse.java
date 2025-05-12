@@ -1,5 +1,8 @@
 package rom.crm.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -13,7 +16,8 @@ import java.time.LocalDateTime;
  * @param minutesRemaining Оставшиеся минуты
  * @param regDate Дата регистрации
  * @param nextPay Дата следующего платежа
- */public record UserResponse(
+ */
+public record UserResponse(
         Long id,
         String name,
         String msisdn,
@@ -21,5 +25,5 @@ import java.time.LocalDateTime;
         Double balance,
         Integer minutesRemaining,
         LocalDateTime regDate,
-        LocalDateTime nextPay
+        LocalDate nextPay
 ) { }

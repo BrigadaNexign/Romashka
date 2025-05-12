@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import rom.crm.controller.BrtClient;
+import rom.crm.client.BrtClient;
 import rom.crm.dto.request.BalanceUpdate;
 import rom.crm.dto.request.ChangeTariffRequest;
 import rom.crm.dto.request.UserUpdateRequest;

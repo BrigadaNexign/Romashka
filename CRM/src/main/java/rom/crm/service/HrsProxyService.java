@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import rom.crm.controller.HrsClient;
+import rom.crm.client.HrsClient;
 import rom.crm.dto.request.CreateTariffRequest;
 import rom.crm.dto.response.TariffResponse;
 import rom.crm.exception.ExternalServiceException;

@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import rom.brt.dto.CalculationResponse;
+import rom.brt.dto.response.CalculationResponse;
 import rom.brt.dto.Fragment;
 import rom.brt.entity.CallRecord;
 import rom.brt.repository.CallRecordRepository;
@@ -44,5 +44,20 @@ public class CallRecordService {
                 .build();
 
         return callRecordRepository.save(record);
+    }
+
+    /**
+     * Проверяет, существует ли поступивший фрагмент CDR в базе обработанных звонков.
+     *
+     * @param fragment данные о звонке
+     */
+    public boolean existsDuplicate(Fragment fragment) {
+        return callRecordRepository.existsByCallTypeAndCallerMsisdnAndReceiverMsisdnAndStartTimeAndEndTime(
+                fragment.getCallType(),
+                fragment.getCallerMsisdn(),
+                fragment.getReceiverMsisdn(),
+                fragment.getStartTime(),
+                fragment.getEndTime()
+        );
     }
 }

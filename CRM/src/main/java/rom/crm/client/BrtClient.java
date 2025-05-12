@@ -1,4 +1,4 @@
-package rom.crm.controller;
+package rom.crm.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -8,35 +8,34 @@ import rom.crm.dto.request.ChangeTariffRequest;
 import rom.crm.dto.request.UserUpdateRequest;
 import rom.crm.dto.response.UserResponse;
 
-/**
- * Feign клиент для взаимодействия с BRT.
- * Предоставляет методы для работы с абонентами и их тарифами.
- */
 @FeignClient(
-        name = "brt-service",
+        name = "brt",
         url = "${services.brt.url}${services.brt.api.mappings.user.base}"
 )
 public interface BrtClient {
 
-    @GetMapping("${services.brt.api.mappings.user.get}")
+    @GetMapping("/{msisdn}")
     ResponseEntity<UserResponse> getUserByMsisdn(
             @PathVariable String msisdn
     );
 
-    @PostMapping("${services.brt.api.mappings.top-up}")
+    @PostMapping("/{msisdn}/balance/top-up")
     ResponseEntity<Void> topUpBalance(
             @PathVariable String msisdn,
             @RequestBody BalanceUpdate dto
     );
 
-    @PostMapping("${services.brt.api.mappings.user.create}")
+    @PostMapping("/create")
     ResponseEntity<Void> createUser(
             @RequestBody UserUpdateRequest request
     );
 
-    @PostMapping("${services.brt.api.mappings.tariff.change}")
+    @PostMapping("/{msisdn}/tariff/change")
     ResponseEntity<Void> changeUserTariff(
             @PathVariable String msisdn,
             @RequestBody ChangeTariffRequest request
     );
+
+    @GetMapping("/health")
+    ResponseEntity<Void> checkHealth();
 }

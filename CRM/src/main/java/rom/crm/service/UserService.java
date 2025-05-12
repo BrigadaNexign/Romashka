@@ -25,7 +25,6 @@ public class UserService {
 
     public User create(User user) {
         if (repository.existsByUsername(user.getUsername())) {
-            // Заменить на свои исключения
             throw new RuntimeException("Пользователь с таким именем уже существует");
         }
 
@@ -44,11 +43,6 @@ public class UserService {
 
     public UserDetailsService userDetailsService() {
         return this::getByUsername;
-    }
-
-    public User getCurrentUser() {
-        var username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return getByUsername(username);
     }
 }
 

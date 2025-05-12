@@ -46,7 +46,7 @@ public class TariffService {
     public TariffResponse findTariffResponseById(long tariffId) throws NoTariffFoundException {
         Tariff tariff = tariffRepository.findById(tariffId)
                 .orElseThrow(() -> new NoTariffFoundException(tariffId));
-        return mapToResponseSafe(tariff);
+        return mapToResponse(tariff);
     }
 
     @Transactional(readOnly = true)
@@ -56,9 +56,10 @@ public class TariffService {
         Sort sort = sortBy != null ? Sort.by(sortBy) : Sort.unsorted();
         List<Tariff> tariffs = tariffRepository.findAll(sort);
 
+        logger.info("Got tariffs {}", tariffs);
+
         return tariffs.stream()
-                .map(this::mapToResponseSafe)
-                .filter(Objects::nonNull)
+                .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
@@ -70,11 +71,11 @@ public class TariffService {
         Tariff tariff = tariffRepository.findById((long) subscriberTariff.getTariffId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tariff not found"));
 
-        return mapToResponseSafe(tariff);
+        return mapToResponse(tariff);
     }
 
     @Transactional
-    public void createTariff(CreateTariffRequest request) {
+    public TariffResponse createTariff(CreateTariffRequest request) {
         logger.debug("Creating new tariff with name: {}", request.name());
         if (tariffRepository.findByName(request.name()).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Tariff with name " + request.name() + " already exists");
@@ -125,6 +126,8 @@ public class TariffService {
                 tariffParameterRepository.save(tariffParam);
             }
         }
+
+        return mapToResponse(tariff);
     }
 
     @Transactional
@@ -132,29 +135,20 @@ public class TariffService {
         tariffRepository.deleteById(id);
     }
 
-    private TariffResponse mapToResponseSafe(Tariff tariff) {
-        try {
-            return mapToResponse(tariff);
-        } catch (NoIntervalsFoundException e) {
-            logger.warn("No intervals found for tariff ID: {}. Skipping this tariff.", tariff.getId());
-        }
-        return null;
-    }
-
-    private TariffResponse mapToResponse(Tariff tariff) throws NoIntervalsFoundException {
+    private TariffResponse mapToResponse(Tariff tariff) {
         List<TariffInterval> tariffIntervalList = tariffIntervalRepository.findAllByTariffId(tariff.getId());
 
-        if (tariffIntervalList.isEmpty()) throw new NoIntervalsFoundException(tariff.getId());
-        if (tariffIntervalList.size() > 1) logger.warn("Got multiple tariff intervals, using first");
+        TariffInterval tariffInterval = null;
 
-        TariffInterval tariffInterval = tariffIntervalList.get(0);
+        if (tariffIntervalList.size() > 1) logger.warn("Got multiple tariff intervals, using first");
+        if (tariffIntervalList.size() == 1) tariffInterval = tariffIntervalList.get(0);
 
         return new TariffResponse(
                 tariff.getId(),
                 tariff.getName(),
                 tariff.getDescription(),
-                tariffInterval.getId().getInterval(),
-                tariffInterval.getPrice().doubleValue(),
+                tariffInterval != null ? tariffInterval.getId().getInterval() : null,
+                tariffInterval != null ? tariffInterval.getPrice().doubleValue(): null,
                 tariff.getType(),
                 callPricingService.findListOfDtoById(tariff.getId()),
                 tariffParamService.findTariffResponseByTariffId(tariff.getId())

@@ -3,7 +3,7 @@ package rom.brt.service;
 import org.junit.jupiter.api.Test;
 import rom.brt.dto.Fragment;
 import rom.brt.dto.Subscriber;
-import rom.brt.dto.CalculationRequest;
+import rom.brt.dto.request.CalculationRequest;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 

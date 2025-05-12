@@ -1,4 +1,4 @@
-package rom.brt.dto;
+package rom.brt.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

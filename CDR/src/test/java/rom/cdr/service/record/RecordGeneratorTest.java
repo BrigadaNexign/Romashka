@@ -18,10 +18,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class RecordGeneratorTest {
-
     @Mock
     private FragmentGenerator fragmentGenerator;
-
     @Mock
     private RecordProcessor recordProcessor;
 

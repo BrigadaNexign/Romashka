@@ -6,7 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
-import rom.brt.dto.CalculationResponse;
+import rom.brt.dto.response.CalculationResponse;
 import rom.brt.entity.User;
 import rom.brt.entity.UserParams;
 import rom.brt.repository.UserRepository;
@@ -19,10 +19,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class BillingServiceTest {
-
     @Mock
     private UserRepository userRepository;
-
     @Mock
     private Logger logger;
 

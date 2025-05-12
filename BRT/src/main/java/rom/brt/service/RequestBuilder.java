@@ -1,7 +1,7 @@
 package rom.brt.service;
 
 import org.springframework.stereotype.Component;
-import rom.brt.dto.CalculationRequest;
+import rom.brt.dto.request.CalculationRequest;
 import rom.brt.dto.Fragment;
 import rom.brt.dto.Subscriber;
 

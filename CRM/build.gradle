@@ -32,7 +32,6 @@ dependencies {
     implementation 'io.swagger.parser.v3:swagger-parser:2.1.22'
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
     implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.9'
-    implementation 'org.yaml:snakeyaml:2.2'
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.cloud:spring-cloud-starter:4.2.1")
@@ -52,10 +51,14 @@ jacocoTestReport {
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it, exclude: [
-                    '**/config/**',
                     '**/exception/**',
+                    '**/dto/**',
                     '**/entity/**',
-                    '**/dto/**'
+                    '**/*Exception.java',
+                    '**/*Dto.java',
+                    '**/config/**',
+                    '**/controller/**',
+                    '**/client/**'
             ])
         }))
     }

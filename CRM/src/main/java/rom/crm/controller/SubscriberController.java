@@ -23,7 +23,11 @@ import rom.crm.service.BrtProxyService;
 public class SubscriberController {
     private final BrtProxyService brtProxyService;
 
-    @Operation(summary = "Пополнить баланс", description = "Позволяет абоненту пополнить свой баланс")
+    @Operation(
+            summary = "Пополнить баланс",
+            description = "Позволяет абоненту пополнить свой баланс. " +
+                    "Номер для пополнения должен быть равен номеру пользователя"
+    )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Баланс успешно пополнен"),
             @ApiResponse(responseCode = "403", description = "Попытка пополнить чужой баланс"),
