@@ -1,0 +1,70 @@
+nameOverride: ""
+fullnameOverride: ""
+
+images:
+  cdr: "shalopai/romashka-cdr:amd64"
+  brt: "shalopai/romashka-brt:amd64"
+  hrs: "shalopai/romashka-hrs:amd64"
+  crm: "shalopai/romashka-crm:amd64"
+  liquibase: "shalopai/rom-liquibase:amd64"
+  kafka: "confluentinc/cp-kafka:7.6.1"
+  zookeeper: "confluentinc/cp-zookeeper:7.6.1"
+  postgres: "postgres:16-alpine"
+
+pullPolicy: IfNotPresent
+pullSecrets: []
+
+postgres:
+  auth:
+    username: admin
+    password: admin
+    database: romashka
+  storage:
+    size: 10Gi
+    storageClassName: ""
+  resources:
+    requests: { cpu: "100m", memory: "256Mi" }
+    limits:   { cpu: "500m", memory: "512Mi" }
+
+zookeeper:
+  replicas: 1
+  storage:
+    size: 1Gi
+    storageClassName: ""
+  resources:
+    requests: { cpu: "50m", memory: "128Mi" }
+    limits:   { cpu: "250m", memory: "256Mi" }
+
+kafka:
+  replicas: 3
+  servicePort: 29092
+  storage:
+    size: 5Gi
+    storageClassName: ""
+  resources:
+    requests: { cpu: "200m", memory: "512Mi" }
+    limits:   { cpu: "800m", memory: "1Gi" }
+  topic:
+    name: "cdr"
+    replicationFactor: 3
+    minInSyncReplicas: 2
+    partitions: 1
+
+liquibase:
+  changelog: "/liquibase/changelog/changelog-master.xml"
+
+apps:
+  resources:
+    requests: { cpu: "50m", memory: "128Mi" }
+    limits:   { cpu: "300m", memory: "384Mi" }
+  env:
+    SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+    APP_KAFKA_CDR_TOPIC: "cdr"
+  crm:
+    tokenSigningKey: ""
+
+service:
+  type: ClusterIP
+
+probes:
+  enabled: false

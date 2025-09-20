@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: liquibase-migrate
+  labels:
+    {{- include "romashka.labels" . | nindent 4 }}
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        {{- include "romashka.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-postgres
+          image: postgres:16-alpine
+          env:
+            - name: PGUSER
+              valueFrom: { secretKeyRef: { name: {{ include "romashka.fullname" . }}-secrets, key: POSTGRES_USER } }
+          command: ["/bin/sh","-lc"]
+          args:
+            - |
+              echo "Waiting for Postgres at postgres:5432..."
+              until pg_isready -h postgres -p 5432; do sleep 2; done
+              echo "Postgres is ready."
+      containers:
+        - name: liquibase
+          image: {{ .Values.images.liquibase }}
+          imagePullPolicy: {{ .Values.pullPolicy }}
+          env:
+            - name: DB_URL
+              value: jdbc:postgresql://postgres:5432/{{ .Values.postgres.auth.database }}
+            - name: DB_USER
+              valueFrom: { secretKeyRef: { name: {{ include "romashka.fullname" . }}-secrets, key: POSTGRES_USER } }
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: {{ include "romashka.fullname" . }}-secrets, key: POSTGRES_PASSWORD } }
+          command: ["/bin/sh","-lc"]
+          args:
+            - |
+              liquibase --url="${DB_URL}" --username="${DB_USER}" --password="${DB_PASSWORD}" \
+                        --changelog-file="{{ .Values.liquibase.changelog }}" update

@@ -1,0 +1,80 @@
+{{- $apps := dict "cdr" 8080 "brt" 8081 "hrs" 8082 "crm" 8083 -}}
+{{- range $name, $port := $apps }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels:
+    app: {{ $name }}
+    {{- include "romashka.labels" $ | nindent 4 }}
+spec:
+  type: {{ $.Values.service.type }}
+  selector:
+    app: {{ $name }}
+  ports:
+    - name: http
+      port: {{ $port }}
+      targetPort: {{ $port }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    app: {{ $name }}
+    {{- include "romashka.labels" $ | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+        {{- include "romashka.labels" $ | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ $name }}
+          image: {{ index $.Values.images $name }}
+          imagePullPolicy: {{ $.Values.pullPolicy }}
+          ports:
+            - containerPort: {{ $port }}
+          env:
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: {{ $.Values.apps.env.SPRING_KAFKA_BOOTSTRAP_SERVERS | quote }}
+            - name: APP_KAFKA_CDR_TOPIC
+              value: {{ $.Values.apps.env.APP_KAFKA_CDR_TOPIC | quote }}
+{{- if ne $name "cdr" }}
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres:5432/{{ $.Values.postgres.auth.database }}"
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "romashka.fullname" $ }}-secrets
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "romashka.fullname" $ }}-secrets
+                  key: POSTGRES_PASSWORD
+{{- end }}
+{{- if and (eq $name "crm") $.Values.apps.crm.tokenSigningKey }}
+            - name: TOKEN_SIGNING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "romashka.fullname" $ }}-secrets
+                  key: TOKEN_SIGNING_KEY
+{{- end }}
+          resources:
+            {{- toYaml $.Values.apps.resources | nindent 12 }}
+{{- if $.Values.probes.enabled }}
+          readinessProbe:
+            httpGet: { path: "/", port: {{ $port }} }
+            initialDelaySeconds: 5
+          livenessProbe:
+            httpGet: { path: "/", port: {{ $port }} }
+            initialDelaySeconds: 10
+{{- end }}
+---
+{{- end }}

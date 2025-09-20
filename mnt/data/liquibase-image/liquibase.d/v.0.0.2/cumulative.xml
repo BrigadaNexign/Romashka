@@ -1,0 +1,9 @@
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    <include file="2025-04-14-1-create-tables-hrs.sql" relativeToChangelogFile="true" />
+    <include file="2025-04-14-2-fill-tables-hrs.sql" relativeToChangelogFile="true" />
+    <include file="2025-04-14-3-create-tables-brt.sql" relativeToChangelogFile="true" />
+    <include file="2025-04-14-4-fill-tables-brt.sql" relativeToChangelogFile="true" />
+</databaseChangeLog>

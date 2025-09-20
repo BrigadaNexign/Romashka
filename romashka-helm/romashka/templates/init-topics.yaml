@@ -1,0 +1,35 @@
+{{- if and .Values.kafka.topic.name (default true .Values.kafka.enabled) }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: init-topics
+  labels:
+    {{- include "romashka.labels" . | nindent 4 }}
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        {{- include "romashka.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: init-topics
+          image: {{ .Values.images.kafka }}
+          imagePullPolicy: {{ .Values.pullPolicy }}
+          command: ["/bin/bash","-lc"]
+          args:
+            - |
+              set -euo pipefail
+              BS="kafka:{{ .Values.kafka.servicePort }}"
+              TOPIC="{{ .Values.kafka.topic.name }}"
+              RF="{{ .Values.kafka.topic.replicationFactor }}"
+              ISR="{{ .Values.kafka.topic.minInSyncReplicas }}"
+              PARTS="{{ .Values.kafka.topic.partitions }}"
+              echo "Creating topic $TOPIC (desired RF=$RF, ISR=$ISR, PARTS=$PARTS) on $BS"
+              kafka-topics --bootstrap-server "$BS" --create --if-not-exists \
+                   --topic "$TOPIC" --replication-factor "$RF" --partitions "$PARTS" || exit 1
+              echo "Setting min.insync.replicas=$ISR"
+              kafka-configs --bootstrap-server "$BS" --alter --entity-type topics --entity-name "$TOPIC" \
+                   --add-config min.insync.replicas="$ISR" || true
+              {{- end }}
